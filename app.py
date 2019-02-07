@@ -1,5 +1,6 @@
 from flask import Flask, redirect, url_for, session, request, render_template
 from flask_dance.contrib.spotify import make_spotify_blueprint, spotify
+from kkbox_auth import make_kkbox_blueprint
 from config import SPOTIFY_APP_ID, SPOTIFY_APP_SECRET, KKBOX_APP_ID, KKBOX_APP_SECRET
 
 app = Flask(__name__)
@@ -10,21 +11,23 @@ spotify_blueprint = make_spotify_blueprint(
     client_secret=SPOTIFY_APP_SECRET,
     scope='user-read-email playlist-read-private',
 )
+kkbox_blueprint = make_kkbox_blueprint(
+    client_id=KKBOX_APP_ID,
+    client_secret=KKBOX_APP_SECRET,
+    authorization_url_params={'grant_type': 'client_credentials'},
+)
 app.register_blueprint(spotify_blueprint, url_prefix="/login")
+app.register_blueprint(kkbox_blueprint, url_prefix="/login")
 
 
 @app.route('/')
 def index():
-    if not spotify.access_token:
-        return render_template(
-            'index.html',
-            spotify_outh_status="No",
-            kkbox_outh_status="No",
-        )
+    spotify_outh_status = True if spotify.access_token else False
+    kkbox_outh_status = True if kkbox_blueprint.session.access_token else False
     return render_template(
         'index.html',
-        spotify_outh_status="Yes",
-        kkbox_outh_status="No",
+        spotify_outh_status=spotify_outh_status,
+        kkbox_outh_status=kkbox_outh_status,
     )
 
 
@@ -34,7 +37,7 @@ def login():
     if platform == "spotify":
         return redirect(url_for("spotify.login"))
     else:
-        return "aaa"
+        return redirect(url_for("kkbox.login"))
 
 
 if __name__ == '__main__':
