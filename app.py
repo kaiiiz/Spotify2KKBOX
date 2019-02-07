@@ -1,8 +1,10 @@
+import os
 from flask import Flask, redirect, url_for, session, request, render_template
 from flask_dance.contrib.spotify import make_spotify_blueprint, spotify
 from kkbox_auth import make_kkbox_blueprint
 from config import SPOTIFY_APP_ID, SPOTIFY_APP_SECRET, KKBOX_APP_ID, KKBOX_APP_SECRET
 
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1' # Disable HTTPS
 app = Flask(__name__)
 app.secret_key = 'development'
 
@@ -41,4 +43,4 @@ def login():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, ssl_context='adhoc')
+    app.run(debug=True)
