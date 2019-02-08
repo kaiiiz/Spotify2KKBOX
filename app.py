@@ -117,10 +117,10 @@ def upload_kbl():
             session['kbl_package_descr'] = package_descr or ''
             session['kbl_package_packdate'] = package_packdate or ''
             session['kbl_status'] = 'Success'
-            kbl['kkbox_ver'] = kkbox_ver
-            kbl['package_ver'] = package_ver
-            kbl['package_descr'] = package_descr
-            kbl['package_packdate'] = package_packdate
+            kbl['kkbox_ver'] = kkbox_ver or ''
+            kbl['package_ver'] = package_ver or ''
+            kbl['package_descr'] = package_descr or ''
+            kbl['package_packdate'] = package_packdate or ''
             kbl['status'] = 'Success'
             return jsonify(kbl=kbl)
 

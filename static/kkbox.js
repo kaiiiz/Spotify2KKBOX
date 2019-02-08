@@ -1,7 +1,7 @@
 /*
  * Function of press the 'Upload' button
  * This function bind button to an JQuery AJAX function
- * After click the button, AJAX will upload kbl file and get kbl infomation
+ * After click the button, AJAX will upload kbl file and get kbl information
  */
 $(function () {
     $('#upload_kbl_btn').click(function() {
