@@ -17,6 +17,17 @@
         <p>Spotify: {{ spotify_outh_status }}</p>
         <p>KKBOX: {{ kkbox_outh_status }}</p>
         <hr>
+        <h3>Upload kbl file</h3>
+        <form id="upload_kbl" enctype="multipart/form-data" method="POST">
+            <input name="file" type="file">
+            <button id="upload_kbl_btn" type="button">Upload</button>
+        </form>
+        <p>status: <span id="kbl_status">{{ kbl_status }}</span></p>
+        <p>kkbox_ver: <span id="kbl_kkbox_ver">{{ kbl_kkbox_ver }}</span></p>
+        <p>package_ver: <span id="kbl_package_ver">{{ kbl_package_ver }}</span></p>
+        <p>package_descr: <span id="kbl_package_descr">{{ kbl_package_descr }}</span></p>
+        <p>package_packdate: <span id="kbl_package_packdate">{{ kbl_package_packdate }}</span></p>
+        <hr>
         <h3>Spotify playlist</h3>
         <a href=# id='get_sp_playlist'>Get playlist</a>
         <form id='sp_playlist'>
@@ -30,3 +41,4 @@
     $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
 <script src="{{url_for('static', filename='spotify.js')}}"></script>
+<script src="{{url_for('static', filename='kkbox.js')}}"></script>
