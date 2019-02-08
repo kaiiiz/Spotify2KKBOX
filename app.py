@@ -25,8 +25,8 @@ app.register_blueprint(kkbox_blueprint, url_prefix="/login")
 
 @app.route('/')
 def index():
-    spotify_outh_status = True if spotify.access_token else False
-    kkbox_outh_status = True if kkbox_blueprint.session.access_token else False
+    spotify_outh_status = True if checkauth('spotify') else False
+    kkbox_outh_status = True if checkauth('kkbox') else False
     return render_template(
         'index.html',
         spotify_outh_status=spotify_outh_status,
@@ -34,13 +34,42 @@ def index():
     )
 
 
+def checkauth(platform):
+    if platform == 'spotify':
+        token = spotify.access_token
+        if token:
+            url = 'https://api.spotify.com/v1/me'
+            headers = {'Authorization': 'Bearer ' + token}
+            req = requests.get(url, headers=headers).json()
+            if req.get('error'):
+                return False
+            else:
+                return True
+        else:
+            return False
+    elif platform == 'kkbox':
+        token = kkbox_blueprint.session.access_token
+        if token:
+            url = 'https://api.kkbox.com/v1.1/charts'
+            headers = {'Authorization': 'Bearer ' + token, 'territory': 'TW'}
+            req = requests.get(url, headers=headers).json()
+            if req.get('error'):
+                return False
+            else:
+                return True
+        else:
+            return False
+
+
 @app.route('/login', methods=['POST'])
 def login():
     platform = request.form.get('platform')
     if platform == "spotify":
         return redirect(url_for("spotify.login"))
-    else:
+    elif platform == "kkbox":
         return redirect(url_for("kkbox.login"))
+    else:
+        return redirect(url_for("index"))
 
 
 @app.route('/get/spotify/playlist')
