@@ -18,9 +18,9 @@
         <p>KKBOX: {{ kkbox_outh_status }}</p>
         <hr>
         <h3>Spotify playlist</h3>
-        <a href=# id='get_spotify_playlist'>Get playlist</a>
-        <div id='spotify_playlist'>
-        </div>
+        <a href=# id='get_sp_playlist'>Get playlist</a>
+        <form id='sp_playlist'>
+        </form>
     </body>
 
 </html>
@@ -29,24 +29,4 @@
 <script type=text/javascript>
     $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
-<script type=text/javascript>
-    $(function() {
-        $('a#get_spotify_playlist').bind(
-            'click',
-            function() {
-                $.getJSON(
-                    $SCRIPT_ROOT + '/get/spotify_playlist', //url
-                    {}, // parameter
-                    function(data) {
-                        for (let i = 0; i < data.playlist.items.length; i++) {
-                            const element = data.playlist.items[i];
-                            console.log(element)
-                            $("#spotify_playlist").append("<p>"+ element.name +"</p>")
-                        }
-                    } // return function
-                );
-                return false;
-            }
-        );
-    });
-</script>
+<script src="{{url_for('static', filename='spotify.js')}}"></script>

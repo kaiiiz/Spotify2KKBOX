@@ -43,12 +43,31 @@ def login():
         return redirect(url_for("kkbox.login"))
 
 
-@app.route('/get/spotify_playlist')
+@app.route('/get/spotify/playlist')
 def get_spotify_playlist():
     url = 'https://api.spotify.com/v1/me/playlists'
     headers = {'Authorization': 'Bearer ' + spotify.access_token}
-    playlist = requests.get(url, headers=headers)
-    return jsonify(playlist=playlist.json())
+    playlist = requests.get(url, headers=headers).json()
+    return jsonify(playlist=playlist)
+
+
+@app.route('/get/spotify/playlist/track')
+def get_spotify_playlist_track():
+    playlist_id = request.args.get('playlist_id', '', type=str)
+    url = 'https://api.spotify.com/v1/playlists/' + playlist_id + '/tracks'
+    headers = {'Authorization': 'Bearer ' + spotify.access_token}
+    tracks_raw = requests.get(url, headers=headers).json()
+    tracks = tracks_raw.get('items')
+    """
+    Spotify limits 100 songs in each query.
+    So if playlist contains more than 100 songs, it must be queried multiple times to get whole playlists.
+    """
+    while tracks_raw.get('next'):
+        tracks_raw = requests.get(
+            tracks_raw.get('next'), headers=headers).json()
+        tracks_next = tracks_raw.get('items')
+        tracks += tracks_next
+    return jsonify(tracks=tracks)
 
 
 if __name__ == '__main__':
