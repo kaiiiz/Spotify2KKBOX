@@ -20,8 +20,8 @@
         <h3>Upload kbl file</h3>
         <form id="upload_kbl" enctype="multipart/form-data" method="POST">
             <input name="file" type="file">
-            <button id="upload_kbl_btn" type="button">Upload</button>
         </form>
+        <button id="upload_kbl_btn" type="button">Upload</button>
         <p>status: <span id="kbl_status">{{ kbl_status }}</span></p>
         <p>kkbox_ver: <span id="kbl_kkbox_ver">{{ kbl_kkbox_ver }}</span></p>
         <p>package_ver: <span id="kbl_package_ver">{{ kbl_package_ver }}</span></p>
@@ -30,8 +30,9 @@
         <hr>
         <h3>Spotify playlist</h3>
         <a href=# id='get_sp_playlist'>Get playlist</a>
-        <form id='sp_playlist'>
+        <form id="convert_playlist" method="POST">
         </form>
+        <button id="convert_btn" type="button">Convert</button>
     </body>
 
 </html>

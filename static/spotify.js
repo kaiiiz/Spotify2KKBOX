@@ -1,4 +1,25 @@
 /*
+ * Function of press the 'Convert' button
+ * This function bind button to an JQuery AJAX function
+ * After click the button, AJAX will post /convert_playlist
+ */
+$(function () {
+    $('#convert_btn').click(function() {
+        var form_data = new FormData($('#convert_playlist')[0]);
+        $.ajax({
+            type: 'POST',
+            url: '/convert_playlist',
+            data: form_data,
+            contentType: false,
+            cache: false,
+            processData: false,
+            success: function (data) {
+                console.log('aaa')
+            },
+        });
+    });
+});
+/*
  * Function of press the 'Get playlist' button
  * This function bind button to an JQuery AJAX function
  * After click the button, AJAX will query /get/spotify/playlist and get the playlists of user
@@ -22,11 +43,13 @@ $(function () {
                          * <br>
                          * <div id="sp_playlist_track_detail_{{ playlist_id }}"></div>
                          */
-                        html += "<input type='checkbox' name='sp_playlist' value='" + element.id + "'>" + element.name;
+                        html += "<div>"
+                        html += "<input type='checkbox' name='" + element.name + "' value='" + element.id + "'>" + element.name;
                         html += "<a name='sp_playlist_detail_btn' href=# id='" + element.id + "'>Detail</a></br>";
                         html += "<div id='sp_playlist_track_detail_" + element.id + "'></div>";
+                        html += "</div>"
                     }
-                    $("#sp_playlist").html(html)
+                    $("#convert_playlist").html(html)
                     bindIDToButton();
                 } // return function
             );

@@ -58,6 +58,23 @@ def checkauth(platform):
             return False
 
 
+def all_tracks_in(playlist_id):
+    url = 'https://api.spotify.com/v1/playlists/' + playlist_id + '/tracks'
+    headers = {'Authorization': 'Bearer ' + spotify.access_token}
+    tracks_raw = requests.get(url, headers=headers).json()
+    tracks = tracks_raw.get('items')
+    """
+    Spotify limits 100 songs in each query.
+    So if playlist contains more than 100 songs, it must be queried multiple times to get whole playlists.
+    """
+    while tracks_raw.get('next'):
+        tracks_raw = requests.get(
+            tracks_raw.get('next'), headers=headers).json()
+        tracks_next = tracks_raw.get('items')
+        tracks += tracks_next
+    return tracks
+
+
 # Web page
 @app.route('/')
 def index():
@@ -84,6 +101,12 @@ def index():
     )
 
 
+@app.route('/convert_playlist', methods=['POST'])
+def convert_playlist():
+    print(request.form)
+    return jsonify(a=None)
+
+
 @app.route('/upload_kbl', methods=['POST'])
 def upload_kbl():
     kbl = {
@@ -95,10 +118,8 @@ def upload_kbl():
     file = request.files.get('file')
     if not file:
         kbl['status'] = "Upload failed! File doesn't exist"
-        return jsonify(kbl=kbl)
     elif not allowed_file(file.filename):
         kbl['status'] = "Upload failed! Unsupport file format"
-        return jsonify(kbl=kbl)
     else:
         xml = file.read().decode('utf-8')
         try:
@@ -122,7 +143,7 @@ def upload_kbl():
             kbl['package_descr'] = package_descr or ''
             kbl['package_packdate'] = package_packdate or ''
             kbl['status'] = 'Success'
-            return jsonify(kbl=kbl)
+    return jsonify(kbl=kbl)
 
 
 @app.route('/login', methods=['POST'])
@@ -147,19 +168,7 @@ def get_spotify_playlist():
 @app.route('/get/spotify/playlist/track')
 def get_spotify_playlist_track():
     playlist_id = request.args.get('playlist_id', '', type=str)
-    url = 'https://api.spotify.com/v1/playlists/' + playlist_id + '/tracks'
-    headers = {'Authorization': 'Bearer ' + spotify.access_token}
-    tracks_raw = requests.get(url, headers=headers).json()
-    tracks = tracks_raw.get('items')
-    """
-    Spotify limits 100 songs in each query.
-    So if playlist contains more than 100 songs, it must be queried multiple times to get whole playlists.
-    """
-    while tracks_raw.get('next'):
-        tracks_raw = requests.get(
-            tracks_raw.get('next'), headers=headers).json()
-        tracks_next = tracks_raw.get('items')
-        tracks += tracks_next
+    tracks = all_tracks_in(playlist_id)
     return jsonify(tracks=tracks)
 
 
