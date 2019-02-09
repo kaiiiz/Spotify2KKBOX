@@ -32,6 +32,10 @@ $(function () {
                 $SCRIPT_ROOT + '/get/spotify/playlist', //url
                 {}, // url parameter
                 function (data) {
+                    if (data.status == 'failed') {
+                        $("#convert_playlist").html('<p>Check auth failed! Please login spotify!</p>')
+                        return
+                    }
                     playlist = data.playlist.items
                     html = ''
                     for (let i = 0; i < playlist.length; i++) {

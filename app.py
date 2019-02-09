@@ -159,6 +159,8 @@ def login():
 
 @app.route('/get/spotify/playlist')
 def get_spotify_playlist():
+    if not checkauth('spotify'):
+        return jsonify(status='failed')
     url = 'https://api.spotify.com/v1/me/playlists'
     headers = {'Authorization': 'Bearer ' + spotify.access_token}
     playlist = requests.get(url, headers=headers).json()
