@@ -8,7 +8,7 @@ $(function () {
         var form_data = new FormData($('#convert_playlist')[0]);
         $.ajax({
             type: 'POST',
-            url: '/convert_playlist',
+            url: '/convert',
             data: form_data,
             contentType: false,
             cache: false,

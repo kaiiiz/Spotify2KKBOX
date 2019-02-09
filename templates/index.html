@@ -40,6 +40,7 @@
                     <span class="progress-bar-label">0%</span>
                 </div>
             </div>
+            <p id='text'></p>
         </div>
     </body>
 
@@ -52,4 +53,5 @@
     $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
 <script src="{{url_for('static', filename='spotify.js')}}"></script>
-<script src="{{url_for('static', filename='kkbox.js')}}"></script>
+<script src="{{url_for('static', filename='kbl.js')}}"></script>
+<script src="{{url_for('static', filename='convert.js')}}"></script>

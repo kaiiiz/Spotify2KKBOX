@@ -1,5 +1,5 @@
-import os, random, string, xmltodict, requests
-from flask import Flask, redirect, url_for, session, request, render_template, jsonify, send_from_directory
+import os, random, string, xmltodict, requests, time
+from flask import Flask, redirect, url_for, session, request, render_template, jsonify, send_from_directory, Response
 from flask_dance.contrib.spotify import make_spotify_blueprint, spotify
 from kkbox_auth import make_kkbox_blueprint
 from config import SPOTIFY_APP_ID, SPOTIFY_APP_SECRET, KKBOX_APP_ID, KKBOX_APP_SECRET
@@ -75,6 +75,36 @@ def all_tracks_in(playlist_id):
     return tracks
 
 
+def get_trackdata_in_kk(name, artist, album):
+    headers = {
+        'Authorization': 'Bearer ' + kkbox_blueprint.session.access_token
+    }
+    # 1. Search album
+    url = 'https://api.kkbox.com/v1.1/search'
+    q = artist + ' ' + album
+    params = {
+        'q': q,
+        'type': 'album',
+        'limit': 1,
+    }
+    req = requests.get(url, params=params, headers=headers).json()
+    album_id = req.get('albums').get('data')[0].get('id')
+    # 2. Search track in album
+    url = 'https://api.kkbox.com/v1.1/albums/' + album_id + '/tracks'
+    album = requests.get(url, headers=headers).json().get('data')
+    track_id = ''
+    for track in album:
+        if track.get('name').lower() == name.lower():
+            track_id = track.get('id')
+            break
+    if track_id == '':
+        return None
+    # 3. Get track data by track_id
+    url = 'https://api.kkbox.com/v1.1/tracks/' + track_id
+    track_data = requests.get(url, headers=headers).json()
+    return track_data
+
+
 # Web page
 @app.route('/')
 def index():
@@ -101,10 +131,77 @@ def index():
     )
 
 
-@app.route('/convert_playlist', methods=['POST'])
-def convert_playlist():
-    print(request.form)
-    return jsonify(a=None)
+def generate():
+    x = 0
+    while x <= 100:
+        yield "data:" + str(x) + "\n\n"
+        yield 'event: abc\ndata:' + str(x) + '\n\n'
+        x = x + 10
+        time.sleep(0.2)
+
+
+@app.route('/convert', methods=['GET', 'POST'])
+def convert():
+    form = request.form.to_dict()
+    # 1. Create all tracks list from Spotify
+    playlists = []
+    playlists_num = 0
+    tracks_num = 0
+    for playlist_name, sp_playlist_id in form.items():
+        sp_playlist_tracks = all_tracks_in(sp_playlist_id)
+        tracks_num += len(sp_playlist_tracks)
+        playlists_num += 1
+        playlists.append([playlist_name, sp_playlist_tracks])
+    # 2. Search each track in kkbox
+    convert_list = []
+    for sp_playlist in playlists:
+        success = []
+        failed = []
+        playlist_name = sp_playlist[0]
+        print(playlist_name)
+        for sp_track in sp_playlist[1]:
+            track_name = sp_track['track']['name']
+            track_artist = sp_track['track']['artists'][0]['name']
+            track_album = sp_track['track']['album']['name']
+            kk_track = get_trackdata_in_kk(track_name, track_artist,
+                                           track_album)
+            if kk_track:
+                success.append(kk_track)
+            else:
+                failed.append(sp_track)
+        convert_list.append(
+            [playlist_name, {
+                'success': success,
+                'failed': failed
+            }])
+        """
+        convert_list structure:
+        [
+            [
+                'Playlist1',
+                {
+                    'success': [ <- kkbox format
+                        {track1},
+                        {track2},
+                        ...
+                    ],
+                    'failed': [ <- spotify format
+                        {track1},
+                        {track2},
+                        ...
+                    ],
+                }
+            ],
+            [
+                'Playlist2',
+                {
+                    ...
+                }
+            ]
+        ]
+        """
+    print(convert_list)
+    return Response(generate(), mimetype='text/event-stream')
 
 
 @app.route('/upload_kbl', methods=['POST'])
