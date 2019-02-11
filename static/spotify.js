@@ -1,7 +1,7 @@
 /*
- * Function of press the 'Convert' button
+ * Function of press the 'Search in KKBOX' button
  * This function bind button to an JQuery AJAX function
- * After click the button, AJAX will post /spotify_playlist
+ * After click the button, AJAX will post /search/all_tracks
  */
 $(function () {
     $('#search_btn').click(function () {
@@ -20,10 +20,10 @@ $(function () {
                     log_html += '<div id="search_log_' + i + '">'
                     log_html += '<h4>' + sp_playlists[i][0] + '</h4>'
                     log_html += '<h5>Success</h5>'
-                    log_html += '<div id="success_' + i + '">'
-                    log_html += '</div>'
+                    log_html += '<form id="search_success_' + i + '" name="' + sp_playlists[i][0] + '">'
+                    log_html += '</form>'
                     log_html += '<h5>Failed</h5>'
-                    log_html += '<ol id="failed_' + i + '">'
+                    log_html += '<ol id="search_failed_' + i + '">'
                     log_html += '</ol>'
                     log_html += '</div>'
                 }
@@ -50,7 +50,6 @@ function search_in_kkbox(sp_playlist, playlist_cnt) {
             success: function (data) {
                 var track_data = data.track_data.data
                 var status = data.track_data.status
-                console.log(track_data)
                 if (status == 'success') {
                     var track_name = track_data['name']
                     var track_album = track_data['album']['name']
@@ -58,15 +57,15 @@ function search_in_kkbox(sp_playlist, playlist_cnt) {
                     var track_id = track_data['id']
                     var success_log = '<div>'
                     success_log += "<input type='checkbox' name='" + track_name + "' value='" + track_id + "'checked>"
-                    success_log += track_name
+                    success_log += track_name + ' - ' + track_artist + ' - ' + track_album
                     success_log += '</div>'
-                    $('#success_' + playlist_cnt).append(success_log)
+                    $('#search_success_' + playlist_cnt).append(success_log)
                 }
                 else if (status == 'failed') {
                     track_name = track_data['track']['name']
                     track_album = track_data['track']['album']['name']
                     track_artist = track_data['track']['artists'][0]['name']
-                    $('#failed_' + playlist_cnt).append('<li>' + track_name + '</li>')
+                    $('#search_failed_' + playlist_cnt).append('<li>' + track_name + ' - ' + track_artist + ' - ' + track_album + '</li>')
                 }
             },
         });

@@ -30,14 +30,14 @@
         <hr>
         <h3>3. Spotify playlist</h3>
         <a href=# id='get_sp_playlist'>Get playlist</a>
-        <form id="spotify_playlist" method="POST">
-        </form>
+        <form id="spotify_playlist" method="POST"></form>
         <button id="search_btn" type="button">Search in KKBOX</button>
         <hr>
         <h3>4. Select tracks</h3>
-        <form id="search_detail" method="POST">
-        </form>
+        <div id="search_detail" method="POST"></div>
         <button id="convert_btn" type="button">Convert to kbl</button>
+        <hr>
+        <div id="convert_detail" method="POST"></div>
     </body>
 
 </html>
@@ -50,3 +50,4 @@
 </script>
 <script src="{{url_for('static', filename='spotify.js')}}"></script>
 <script src="{{url_for('static', filename='kbl.js')}}"></script>
+<script src="{{url_for('static', filename='convert.js')}}"></script>
