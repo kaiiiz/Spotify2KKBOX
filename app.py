@@ -76,40 +76,45 @@ def all_tracks_in(playlist_id):
 
 
 def get_trackdata_in_kk(name, artist, album):
+    # 0. Prepare variables
     if not checkauth('kkbox'):
         print('Check auth failed')
         return None
+    NAME = name.lower()
+    ABLUM = album.lower()
+    ARTIST = artist.lower()
     headers = {
         'Authorization': 'Bearer ' + kkbox_blueprint.session.access_token
     }
 
     # 1. Search album
     url = 'https://api.kkbox.com/v1.1/search'
-    q = artist + ' ' + album
+    q = ARTIST + ' ' + ABLUM
     params = {
         'q': q,
         'type': 'album',
         'limit': 1,
     }
     try:
-        req = requests.get(url, params=params, headers=headers).json()
+        req_search = requests.get(url, params=params, headers=headers).json()
     except requests.exceptions.ConnectionError:
         print('Connection error')
         return None
     else:
-        album_id = req.get('albums').get('data')[0].get('id')
+        album_id = req_search.get('albums').get('data')[0].get('id')
 
     # 2. Search track in album
     url = 'https://api.kkbox.com/v1.1/albums/' + album_id + '/tracks'
     try:
-        album = requests.get(url, headers=headers).json().get('data')
+        req_album = requests.get(url, headers=headers).json().get('data')
     except requests.exceptions.ConnectionError:
         print('Connection error')
         return None
     else:
         track_id = ''
-        for track in album:
-            if track.get('name').lower() == name.lower():
+        for track in req_album:
+            search_name = track.get('name').lower()
+            if NAME in search_name or search_name in NAME:
                 track_id = track.get('id')
                 break
         if track_id == '':
@@ -119,12 +124,12 @@ def get_trackdata_in_kk(name, artist, album):
     # 3. Get track data by track_id
     url = 'https://api.kkbox.com/v1.1/tracks/' + track_id
     try:
-        track_data = requests.get(url, headers=headers).json()
+        req_trackdata = requests.get(url, headers=headers).json()
     except requests.exceptions.ConnectionError:
         print('Connection error')
         return None
     else:
-        return track_data
+        return req_trackdata
 
 
 # Web page

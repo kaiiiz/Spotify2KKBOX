@@ -19,26 +19,26 @@ $(function () {
                 for (let i = 0; i < sp_playlists.length; i++) {
                     log_html += '<div id="search_log_' + i + '">'
                     log_html += '<h4>' + sp_playlists[i][0] + '</h4>'
-                    log_html += '<div id="success_' + i + '">'
                     log_html += '<h5>Success</h5>'
+                    log_html += '<div id="success_' + i + '">'
                     log_html += '</div>'
-                    log_html += '<div id="failed_' + i + '">'
                     log_html += '<h5>Failed</h5>'
-                    log_html += '</div>'
+                    log_html += '<ol id="failed_' + i + '">'
+                    log_html += '</ol>'
                     log_html += '</div>'
                 }
                 $('#search_detail').html(log_html)
+                var playlist_cnt = 0
                 sp_playlists.forEach(sp_playlist => {
-                    search_in_kkbox(sp_playlist)
-                    // console.log(sp_playlist)
+                    var done = search_in_kkbox(sp_playlist, playlist_cnt)
+                    if (done) playlist_cnt++
                 });
             },
         });
     });
 });
-function search_in_kkbox(sp_playlist) {
+function search_in_kkbox(sp_playlist, playlist_cnt) {
     playlist_name = sp_playlist[0]
-    playlist_cnt = 0
     sp_playlist[1].forEach(track => {
         $.ajax({
             type: 'POST',
@@ -48,10 +48,30 @@ function search_in_kkbox(sp_playlist) {
             cache: false,
             processData: false,
             success: function (data) {
-                console.log(data.track_data.status)
+                var track_data = data.track_data.data
+                var status = data.track_data.status
+                console.log(track_data)
+                if (status == 'success') {
+                    var track_name = track_data['name']
+                    var track_album = track_data['album']['name']
+                    var track_artist = track_data['album']['artist']['name']
+                    var track_id = track_data['id']
+                    var success_log = '<div>'
+                    success_log += "<input type='checkbox' name='" + track_name + "' value='" + track_id + "'checked>"
+                    success_log += track_name
+                    success_log += '</div>'
+                    $('#success_' + playlist_cnt).append(success_log)
+                }
+                else if (status == 'failed') {
+                    track_name = track_data['track']['name']
+                    track_album = track_data['track']['album']['name']
+                    track_artist = track_data['track']['artists'][0]['name']
+                    $('#failed_' + playlist_cnt).append('<li>' + track_name + '</li>')
+                }
             },
         });
     });
+    return 1
 }
 /*
  * Function of press the 'Get playlist' button
