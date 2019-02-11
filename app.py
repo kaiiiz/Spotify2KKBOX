@@ -76,16 +76,18 @@ def all_tracks_in(playlist_id):
 
 
 def get_trackdata_in_kk(name, artist, album):
-    # 0. Prepare variables
-    if not checkauth('kkbox'):
+    if checkauth('kkbox'):
+        headers = {
+            'Authorization': 'Bearer ' + kkbox_blueprint.session.access_token
+        }
+    else:
         print('Check auth failed')
         return None
+
+    # 0. Prepare variables
     NAME = name.lower()
     ABLUM = album.lower()
     ARTIST = artist.lower()
-    headers = {
-        'Authorization': 'Bearer ' + kkbox_blueprint.session.access_token
-    }
 
     # 1. Search album
     url = 'https://api.kkbox.com/v1.1/search'
@@ -118,8 +120,10 @@ def get_trackdata_in_kk(name, artist, album):
                 track_id = track.get('id')
                 break
         if track_id == '':
-            print('Nothing found!')
-            return None
+            track_id = get_trackdata_in_kk_blurred(NAME, ARTIST, ABLUM)
+            if track_id == '':
+                print('Nothing found')
+                return None
 
     # 3. Get track data by track_id
     url = 'https://api.kkbox.com/v1.1/tracks/' + track_id
@@ -130,6 +134,46 @@ def get_trackdata_in_kk(name, artist, album):
         return None
     else:
         return req_trackdata
+
+
+def get_trackdata_in_kk_blurred(name, artist, album):
+    if checkauth('kkbox'):
+        headers = {
+            'Authorization': 'Bearer ' + kkbox_blueprint.session.access_token
+        }
+    else:
+        print('Check auth failed')
+        return ''
+
+    # 0. Prepare variables
+    NAME = name.split('(')[0].split('-')[0]
+    ARTIST = artist.split('(')[0].split('-')[0]
+    ALBUM = album.split('(')[0].split('-')[0]
+
+    # 1. Search name + artist
+    url = 'https://api.kkbox.com/v1.1/search'
+    q = NAME + ' ' + ARTIST
+    params = {
+        'q': q,
+        'type': 'track',
+        'limit': 50,
+    }
+    try:
+        req_search = requests.get(url, params=params, headers=headers).json()
+    except requests.exceptions.ConnectionError:
+        print('Connection error')
+        return None
+
+    # 2. Filter result
+    search_rst = req_search.get('tracks').get('data')
+    track_id = ''
+    for track in search_rst:
+        search_album = track.get('album').get('name').lower()
+        search_artist = track.get('album').get('artist').get('name').lower()
+        if ALBUM in search_album or search_album in ALBUM or ARTIST in search_artist or search_artist in ARTIST:
+            track_id = track.get('id')
+            break
+    return track_id
 
 
 # Web page
