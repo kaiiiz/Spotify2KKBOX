@@ -14,7 +14,18 @@ $(function () {
             cache: false,
             processData: false,
             success: function (data) {
-                console.log(data.sp_playlists)
+                var sp_playlists = data.sp_playlists
+                var log_html = ''
+                for (let i = 0; i < sp_playlists.length; i++) {
+                    log_html += '<div id="search_log_' + i + '">'
+                    log_html += '<div id="success_' + i + '"></div>'
+                    log_html += '<div id="failed_' + i + '"></div>'
+                    log_html += '</div>'
+                }
+                $('#search_detail').html(log_html)
+                sp_playlists.forEach(sp_playlist => {
+                    console.log(sp_playlist)
+                });
             },
         });
     });
