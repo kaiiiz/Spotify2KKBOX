@@ -76,9 +76,13 @@ def all_tracks_in(playlist_id):
 
 
 def get_trackdata_in_kk(name, artist, album):
+    if not checkauth('kkbox'):
+        print('Check auth failed')
+        return None
     headers = {
         'Authorization': 'Bearer ' + kkbox_blueprint.session.access_token
     }
+
     # 1. Search album
     url = 'https://api.kkbox.com/v1.1/search'
     q = artist + ' ' + album
@@ -87,22 +91,40 @@ def get_trackdata_in_kk(name, artist, album):
         'type': 'album',
         'limit': 1,
     }
-    req = requests.get(url, params=params, headers=headers).json()
-    album_id = req.get('albums').get('data')[0].get('id')
+    try:
+        req = requests.get(url, params=params, headers=headers).json()
+    except requests.exceptions.ConnectionError:
+        print('Connection error')
+        return None
+    else:
+        album_id = req.get('albums').get('data')[0].get('id')
+
     # 2. Search track in album
     url = 'https://api.kkbox.com/v1.1/albums/' + album_id + '/tracks'
-    album = requests.get(url, headers=headers).json().get('data')
-    track_id = ''
-    for track in album:
-        if track.get('name').lower() == name.lower():
-            track_id = track.get('id')
-            break
-    if track_id == '':
+    try:
+        album = requests.get(url, headers=headers).json().get('data')
+    except requests.exceptions.ConnectionError:
+        print('Connection error')
         return None
+    else:
+        track_id = ''
+        for track in album:
+            if track.get('name').lower() == name.lower():
+                track_id = track.get('id')
+                break
+        if track_id == '':
+            print('Nothing found!')
+            return None
+
     # 3. Get track data by track_id
     url = 'https://api.kkbox.com/v1.1/tracks/' + track_id
-    track_data = requests.get(url, headers=headers).json()
-    return track_data
+    try:
+        track_data = requests.get(url, headers=headers).json()
+    except requests.exceptions.ConnectionError:
+        print('Connection error')
+        return None
+    else:
+        return track_data
 
 
 # Web page
@@ -139,6 +161,21 @@ def search_all_tracks():
         tracks = all_tracks_in(p_id)
         sp_playlists.append([p_name, tracks])
     return jsonify(sp_playlists=sp_playlists)
+
+
+@app.route('/search/trackdata_in_kkbox', methods=['POST'])
+def search_trackdata_in_kkbox():
+    sp_data = request.json['data']
+    track_name = sp_data['track']['name']
+    track_album = sp_data['track']['album']['name']
+    track_artist = sp_data['track']['artists'][0]['name']
+    kk_data = get_trackdata_in_kk(track_name, track_artist, track_album)
+    if kk_data:
+        track_data = {'status': 'success', 'data': kk_data}
+        return jsonify(track_data=track_data)
+    else:
+        track_data = {'status': 'failed', 'data': sp_data}
+        return jsonify(track_data=track_data)
 
 
 @app.route('/upload_kbl', methods=['POST'])

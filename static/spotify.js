@@ -29,12 +29,30 @@ $(function () {
                 }
                 $('#search_detail').html(log_html)
                 sp_playlists.forEach(sp_playlist => {
-                    console.log(sp_playlist)
+                    search_in_kkbox(sp_playlist)
+                    // console.log(sp_playlist)
                 });
             },
         });
     });
 });
+function search_in_kkbox(sp_playlist) {
+    playlist_name = sp_playlist[0]
+    playlist_cnt = 0
+    sp_playlist[1].forEach(track => {
+        $.ajax({
+            type: 'POST',
+            url: '/search/trackdata_in_kkbox',
+            data: JSON.stringify({ 'data': track }),
+            contentType: 'application/json; charset=utf-8',
+            cache: false,
+            processData: false,
+            success: function (data) {
+                console.log(data.track_data.status)
+            },
+        });
+    });
+}
 /*
  * Function of press the 'Get playlist' button
  * This function bind button to an JQuery AJAX function
