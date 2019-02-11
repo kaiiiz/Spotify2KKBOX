@@ -4,7 +4,7 @@
  * After click the button, AJAX will post /spotify_playlist
  */
 $(function () {
-    $('#search_btn').click(function() {
+    $('#search_btn').click(function () {
         var form_data = new FormData($('#spotify_playlist')[0]);
         $.ajax({
             type: 'POST',
@@ -18,8 +18,13 @@ $(function () {
                 var log_html = ''
                 for (let i = 0; i < sp_playlists.length; i++) {
                     log_html += '<div id="search_log_' + i + '">'
-                    log_html += '<div id="success_' + i + '"></div>'
-                    log_html += '<div id="failed_' + i + '"></div>'
+                    log_html += '<h4>' + sp_playlists[i][0] + '</h4>'
+                    log_html += '<div id="success_' + i + '">'
+                    log_html += '<h5>Success</h5>'
+                    log_html += '</div>'
+                    log_html += '<div id="failed_' + i + '">'
+                    log_html += '<h5>Failed</h5>'
+                    log_html += '</div>'
                     log_html += '</div>'
                 }
                 $('#search_detail').html(log_html)
@@ -38,7 +43,7 @@ $(function () {
 $(function () {
     $('a#get_sp_playlist').bind(
         'click',
-        function() {
+        function () {
             $.getJSON(
                 $SCRIPT_ROOT + '/get/spotify/playlist', //url
                 {}, // url parameter
