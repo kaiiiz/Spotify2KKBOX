@@ -131,77 +131,14 @@ def index():
     )
 
 
-def generate():
-    x = 0
-    while x <= 100:
-        yield "data:" + str(x) + "\n\n"
-        yield 'event: abc\ndata:' + str(x) + '\n\n'
-        x = x + 10
-        time.sleep(0.2)
-
-
-@app.route('/convert', methods=['GET', 'POST'])
-def convert():
-    form = request.form.to_dict()
-    # 1. Create all tracks list from Spotify
-    playlists = []
-    playlists_num = 0
-    tracks_num = 0
-    for playlist_name, sp_playlist_id in form.items():
-        sp_playlist_tracks = all_tracks_in(sp_playlist_id)
-        tracks_num += len(sp_playlist_tracks)
-        playlists_num += 1
-        playlists.append([playlist_name, sp_playlist_tracks])
-    # 2. Search each track in kkbox
-    convert_list = []
-    for sp_playlist in playlists:
-        success = []
-        failed = []
-        playlist_name = sp_playlist[0]
-        print(playlist_name)
-        for sp_track in sp_playlist[1]:
-            track_name = sp_track['track']['name']
-            track_artist = sp_track['track']['artists'][0]['name']
-            track_album = sp_track['track']['album']['name']
-            kk_track = get_trackdata_in_kk(track_name, track_artist,
-                                           track_album)
-            if kk_track:
-                success.append(kk_track)
-            else:
-                failed.append(sp_track)
-        convert_list.append(
-            [playlist_name, {
-                'success': success,
-                'failed': failed
-            }])
-        """
-        convert_list structure:
-        [
-            [
-                'Playlist1',
-                {
-                    'success': [ <- kkbox format
-                        {track1},
-                        {track2},
-                        ...
-                    ],
-                    'failed': [ <- spotify format
-                        {track1},
-                        {track2},
-                        ...
-                    ],
-                }
-            ],
-            [
-                'Playlist2',
-                {
-                    ...
-                }
-            ]
-        ]
-        """
-    print(convert_list)
-    return Response(generate(), mimetype='text/event-stream')
+@app.route('/search/all_tracks', methods=['POST'])
+def search_all_tracks():
+    playlists = request.form.to_dict()
+    sp_playlists = []
+    for p_name, p_id in playlists.items():
+        tracks = all_tracks_in(p_id)
+        sp_playlists.append([p_name, tracks])
+    return jsonify(sp_playlists=sp_playlists)
 
 
 @app.route('/upload_kbl', methods=['POST'])

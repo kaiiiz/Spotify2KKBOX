@@ -1,20 +1,20 @@
 /*
  * Function of press the 'Convert' button
  * This function bind button to an JQuery AJAX function
- * After click the button, AJAX will post /convert_playlist
+ * After click the button, AJAX will post /spotify_playlist
  */
 $(function () {
-    $('#convert_btn').click(function() {
-        var form_data = new FormData($('#convert_playlist')[0]);
+    $('#search_btn').click(function() {
+        var form_data = new FormData($('#spotify_playlist')[0]);
         $.ajax({
             type: 'POST',
-            url: '/convert',
+            url: '/search/all_tracks',
             data: form_data,
             contentType: false,
             cache: false,
             processData: false,
             success: function (data) {
-                console.log('aaa')
+                console.log(data.sp_playlists)
             },
         });
     });
@@ -33,7 +33,7 @@ $(function () {
                 {}, // url parameter
                 function (data) {
                     if (data.status == 'failed') {
-                        $("#convert_playlist").html('<p>Check auth failed! Please login spotify!</p>')
+                        $("#spotify_playlist").html('<p>Check auth failed! Please login spotify!</p>')
                         return
                     }
                     playlist = data.playlist.items
@@ -53,7 +53,7 @@ $(function () {
                         html += "<div id='sp_playlist_track_detail_" + element.id + "'></div>";
                         html += "</div>"
                     }
-                    $("#convert_playlist").html(html)
+                    $("#spotify_playlist").html(html)
                     bindIDToButton();
                 } // return function
             );

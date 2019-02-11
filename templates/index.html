@@ -9,7 +9,7 @@
 
     <body>
         <h1>Spotify2KKBOX</h1>
-        <h3>OAuth</h3>
+        <h3>1. OAuth</h3>
         <form action="{{ url_for('login') }}" method="POST">
             <button name="platform" type="submit" value="spotify">Spotify</button>
             <button name="platform" type="submit" value="kkbox">KKBOX</button>
@@ -17,7 +17,7 @@
         <p>Spotify: {{ spotify_outh_status }}</p>
         <p>KKBOX: {{ kkbox_outh_status }}</p>
         <hr>
-        <h3>Upload kbl file</h3>
+        <h3>2. Upload kbl file</h3>
         <form id="upload_kbl" enctype="multipart/form-data" method="POST">
             <input name="file" type="file">
         </form>
@@ -28,20 +28,12 @@
         <p>package_descr: <span id="kbl_package_descr">{{ kbl_package_descr }}</span></p>
         <p>package_packdate: <span id="kbl_package_packdate">{{ kbl_package_packdate }}</span></p>
         <hr>
-        <h3>Spotify playlist</h3>
+        <h3>3. Spotify playlist</h3>
         <a href=# id='get_sp_playlist'>Get playlist</a>
-        <form id="convert_playlist" method="POST">
+        <form id="spotify_playlist" method="POST">
         </form>
-        <button id="convert_btn" type="button">Convert</button>
+        <button id="search_btn" type="button">Search in KKBOX</button>
         <hr>
-        <div id="convert_detail">
-            <div class="progress" style="width: 50%; margin: 50px;">
-                <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
-                    <span class="progress-bar-label">0%</span>
-                </div>
-            </div>
-            <p id='text'></p>
-        </div>
     </body>
 
 </html>
@@ -54,4 +46,3 @@
 </script>
 <script src="{{url_for('static', filename='spotify.js')}}"></script>
 <script src="{{url_for('static', filename='kbl.js')}}"></script>
-<script src="{{url_for('static', filename='convert.js')}}"></script>
