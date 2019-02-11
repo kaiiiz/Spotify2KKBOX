@@ -146,9 +146,11 @@ def get_trackdata_in_kk_blurred(name, artist, album):
         return ''
 
     # 0. Prepare variables
-    NAME = name.split('(')[0].split('-')[0]
-    ARTIST = artist.split('(')[0].split('-')[0]
-    ALBUM = album.split('(')[0].split('-')[0]
+    NAME = name.split('(')[0].split('-')[0].strip()
+    ARTIST = artist.split('(')[0].split('-')[0].strip()
+    ALBUM = album.split('(')[0].split('-')[0].strip()
+
+    print('--- Blurred search: ' + NAME + '%%%%' + ARTIST + '%%' + ALBUM)
 
     # 1. Search name + artist
     url = 'https://api.kkbox.com/v1.1/search'
@@ -168,12 +170,41 @@ def get_trackdata_in_kk_blurred(name, artist, album):
     search_rst = req_search.get('tracks').get('data')
     track_id = ''
     for track in search_rst:
+        search_name = track.get('name').lower()
         search_album = track.get('album').get('name').lower()
         search_artist = track.get('album').get('artist').get('name').lower()
-        if ALBUM in search_album or search_album in ALBUM or ARTIST in search_artist or search_artist in ARTIST:
-            track_id = track.get('id')
-            break
-    return track_id
+        if NAME in search_name or search_name in NAME:
+            print('- ' + search_name + '%%%%' + search_artist + '%%' +
+                  search_album)
+            if ARTIST in search_artist or search_artist in ARTIST or ALBUM in search_album or search_album in ALBUM:
+                return track.get('id')
+
+    # 3. Search name
+    url = 'https://api.kkbox.com/v1.1/search'
+    q = NAME
+    params = {
+        'q': q,
+        'type': 'track',
+        'limit': 50,
+    }
+    try:
+        req_search = requests.get(url, params=params, headers=headers).json()
+    except requests.exceptions.ConnectionError:
+        print('Connection error')
+        return None
+
+    # 4. Filter result
+    search_rst = req_search.get('tracks').get('data')
+    for track in search_rst:
+        search_name = track.get('name').lower()
+        search_album = track.get('album').get('name').lower()
+        search_artist = track.get('album').get('artist').get('name').lower()
+        print('- ' + search_name + '%%%%' + search_artist + '%%' +
+              search_album)
+        if ARTIST in search_artist or search_artist in ARTIST:
+            return track.get('id')
+
+    return ''
 
 
 # Web page
