@@ -293,6 +293,7 @@ def get_kbl_albumid(song_album_url):
     else:
         return None
 
+
 def get_kbl_template(playlistcnt, songcnt):
     if not (session.get('kbl_kkbox_ver') and session.get('kbl_package_ver') and
             session.get('kbl_package_packdate') and playlistcnt and songcnt):
@@ -390,8 +391,10 @@ def download_generate_kbl():
     kbl_template = get_kbl_template(playlistcnt, songcnt)
     if not kbl_template:  # generate failed
         reply = {
-            'status': 'failed',
-            'msg' : 'generate failed, please upload kbl file to update required information.'
+            'status':
+            'failed',
+            'msg':
+            'generate failed, please upload kbl file to update required information.'
         }
         return jsonify(reply=reply)
     # 2. generate playlist_xml
