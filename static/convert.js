@@ -27,10 +27,10 @@ $(function () {
                         if (status == 'success') {
                             var success_log = '<div>'
                             success_log += `<input type='checkbox'`
-                            success_log += `song_album_id=${kbl_data['song_album_id']}`
-                            success_log += `song_artist_id='${kbl_data['song_artist_id']}'`
-                            success_log += `song_pathname='${kbl_data['song_pathname']}'`
-                            success_log += `song_song_idx='${kbl_data['song_song_idx']}' checked>`
+                            success_log += `data-song_album_id=${kbl_data['song_album_id']} `
+                            success_log += `data-song_artist_id='${kbl_data['song_artist_id']}' `
+                            success_log += `data-song_pathname='${kbl_data['song_pathname']}' `
+                            success_log += `data-song_song_idx='${kbl_data['song_song_idx']}' checked>`
                             success_log += track_name + ' - ' + track_artist + ' - ' + track_album
                             success_log += '</div>'
                             $('#convert_success_' + i).append(success_log)
@@ -50,10 +50,11 @@ function create_frame(playlist_num) {
     for (let i = 0; i < playlist_num; i++) {
         checked_num = $('#search_success_' + i).find('input:checked').length
         if (checked_num) {
+            playlist_name = $('#search_success_' + i).prop("name")
             convert_html += '<div id="convert_log_' + i + '">'
-            convert_html += '<h4>' + $('#search_success_' + i).prop("name") + '</h4>'
+            convert_html += '<h4>' + playlist_name + '</h4>'
             convert_html += '<h5>Success</h5>'
-            convert_html += '<form id="convert_success_' + i + '">'
+            convert_html += `<form id='convert_success_${i}' name='${playlist_name}'>`
             convert_html += '</form>'
             convert_html += '<h5>Failed</h5>'
             convert_html += '<ol id="convert_failed_' + i + '">'

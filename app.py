@@ -1,4 +1,4 @@
-import os, random, string, xmltodict, requests, time, bs4
+import os, random, string, xmltodict, requests, time, bs4, dicttoxml, json
 from flask import Flask, redirect, url_for, session, request, render_template, jsonify, send_from_directory, Response
 from flask_dance.contrib.spotify import make_spotify_blueprint, spotify
 from kkbox_auth import make_kkbox_blueprint
@@ -318,6 +318,109 @@ def index():
         kbl_package_packdate=kbl_package_packdate,
         kbl_status=kbl_status,
     )
+
+
+@app.route('/download/generate_kbl', methods=['POST'])
+def download_generate_kbl():
+    playlists = request.json
+    playlistcnt = 0
+    songcnt = 0
+    for p in playlists:
+        playlistcnt += 1
+        for track in p[1]:
+            songcnt += 1
+
+    # 1. use playlist_xml replace '<playlist></playlist>'
+    playlist_xml = ''
+    kbl_template = get_kbl_template(playlistcnt, songcnt)
+    if not kbl_template:  # generate failed
+        reply = {
+            'status': 'failed',
+            'msg' : 'generate failed, please upload kbl file to update required information.'
+        }
+        return jsonify(reply=reply)
+    # 2. generate playlist_xml
+    for idx, p in enumerate(playlists):
+        p_name = p[0]
+        # 1. use playlist_data_xml replace '<playlist_data></playlist_data>'
+        playlist_data_xml = ''
+        playlist_template = get_kbl_playlist_template(idx + 1, p_name)
+        # 2. generate playlist_data_xml
+        for track in p[1]:
+            song_data = get_kbl_songdata_template(
+                track['song_pathname'], track['song_artist_id'],
+                track['song_album_id'], track['song_song_idx'])
+            playlist_data_xml += song_data
+        playlist_data_xml = '<playlist_data>' + playlist_data_xml + '</playlist_data>'
+        # 3. replace it
+        playlist_template = playlist_template.replace(
+            '<playlist_data></playlist_data>', playlist_data_xml)
+        playlist_xml += playlist_template
+    # 3. replace it
+    playlist_xml = '<playlist>' + playlist_xml + '</playlist>'
+    kbl_template = kbl_template.replace('<playlist></playlist>', playlist_xml)
+    print(kbl_template)
+    reply = {
+        'status': 'success',
+        'msg': 'generate success',
+    }
+    return jsonify(reply=reply)
+
+
+def get_kbl_template(playlistcnt, songcnt):
+    if not (session.get('kbl_kkbox_ver') and session.get('kbl_package_ver') and
+            session.get('kbl_package_packdate') and playlistcnt and songcnt):
+        return None
+    template = {
+        "utf-8_data": {
+            "kkbox_package": {
+                "kkbox_ver": session["kbl_kkbox_ver"],
+                "playlist": {},
+                "package": {
+                    "ver": session["kbl_package_ver"],
+                    "descr": session["kbl_package_descr"],
+                    "packdate": session["kbl_package_packdate"],
+                    "playlistcnt": playlistcnt,
+                    "songcnt": songcnt
+                }
+            }
+        }
+    }
+    template = json.dumps(template)
+    obj = json.loads(template)
+    xml = dicttoxml.dicttoxml(obj, root=False, attr_type=False).decode('utf-8')
+    return xml
+
+
+def get_kbl_playlist_template(playlist_id, playlist_name):
+    template = {
+        "playlist": {
+            "playlist_id": playlist_id,
+            "playlist_name": playlist_name,
+            "playlist_descr": "",
+            "playlist_data": {}
+        }
+    }
+    template = json.dumps(template)
+    obj = json.loads(template)
+    xml = dicttoxml.dicttoxml(obj, root=False, attr_type=False).decode('utf-8')
+    return xml
+
+
+def get_kbl_songdata_template(song_pathname, song_artist_id, song_album_id,
+                              song_song_idx):
+    template = {
+        "song_data": {
+            "song_pathname": song_pathname,
+            "song_artist_id": song_artist_id,
+            "song_album_id": song_album_id,
+            "song_song_idx": song_song_idx
+        }
+    }
+    template = json.dumps(template)
+    obj = json.loads(template)
+    xml = dicttoxml.dicttoxml(obj, root=False, attr_type=False).decode('utf-8')
+    return xml
 
 
 @app.route('/convert/crawler_search_id', methods=['POST'])
