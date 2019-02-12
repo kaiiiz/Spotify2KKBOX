@@ -293,6 +293,61 @@ def get_kbl_albumid(song_album_url):
     else:
         return None
 
+def get_kbl_template(playlistcnt, songcnt):
+    if not (session.get('kbl_kkbox_ver') and session.get('kbl_package_ver') and
+            session.get('kbl_package_packdate') and playlistcnt and songcnt):
+        return None
+    template = {
+        "utf-8_data": {
+            "kkbox_package": {
+                "kkbox_ver": session["kbl_kkbox_ver"],
+                "playlist": {},
+                "package": {
+                    "ver": session["kbl_package_ver"],
+                    "descr": session["kbl_package_descr"],
+                    "packdate": session["kbl_package_packdate"],
+                    "playlistcnt": playlistcnt,
+                    "songcnt": songcnt
+                }
+            }
+        }
+    }
+    template = json.dumps(template)
+    obj = json.loads(template)
+    xml = dicttoxml.dicttoxml(obj, root=False, attr_type=False).decode('utf-8')
+    return xml
+
+
+def get_kbl_playlist_template(playlist_id, playlist_name):
+    template = {
+        "playlist": {
+            "playlist_id": playlist_id,
+            "playlist_name": playlist_name,
+            "playlist_descr": "",
+            "playlist_data": {}
+        }
+    }
+    template = json.dumps(template)
+    obj = json.loads(template)
+    xml = dicttoxml.dicttoxml(obj, root=False, attr_type=False).decode('utf-8')
+    return xml
+
+
+def get_kbl_songdata_template(song_pathname, song_artist_id, song_album_id,
+                              song_song_idx):
+    template = {
+        "song_data": {
+            "song_pathname": song_pathname,
+            "song_artist_id": song_artist_id,
+            "song_album_id": song_album_id,
+            "song_song_idx": song_song_idx
+        }
+    }
+    template = json.dumps(template)
+    obj = json.loads(template)
+    xml = dicttoxml.dicttoxml(obj, root=False, attr_type=False).decode('utf-8')
+    return xml
+
 
 # Web page
 @app.route('/')
@@ -365,62 +420,6 @@ def download_generate_kbl():
         'msg': 'generate success',
     }
     return jsonify(reply=reply)
-
-
-def get_kbl_template(playlistcnt, songcnt):
-    if not (session.get('kbl_kkbox_ver') and session.get('kbl_package_ver') and
-            session.get('kbl_package_packdate') and playlistcnt and songcnt):
-        return None
-    template = {
-        "utf-8_data": {
-            "kkbox_package": {
-                "kkbox_ver": session["kbl_kkbox_ver"],
-                "playlist": {},
-                "package": {
-                    "ver": session["kbl_package_ver"],
-                    "descr": session["kbl_package_descr"],
-                    "packdate": session["kbl_package_packdate"],
-                    "playlistcnt": playlistcnt,
-                    "songcnt": songcnt
-                }
-            }
-        }
-    }
-    template = json.dumps(template)
-    obj = json.loads(template)
-    xml = dicttoxml.dicttoxml(obj, root=False, attr_type=False).decode('utf-8')
-    return xml
-
-
-def get_kbl_playlist_template(playlist_id, playlist_name):
-    template = {
-        "playlist": {
-            "playlist_id": playlist_id,
-            "playlist_name": playlist_name,
-            "playlist_descr": "",
-            "playlist_data": {}
-        }
-    }
-    template = json.dumps(template)
-    obj = json.loads(template)
-    xml = dicttoxml.dicttoxml(obj, root=False, attr_type=False).decode('utf-8')
-    return xml
-
-
-def get_kbl_songdata_template(song_pathname, song_artist_id, song_album_id,
-                              song_song_idx):
-    template = {
-        "song_data": {
-            "song_pathname": song_pathname,
-            "song_artist_id": song_artist_id,
-            "song_album_id": song_album_id,
-            "song_song_idx": song_song_idx
-        }
-    }
-    template = json.dumps(template)
-    obj = json.loads(template)
-    xml = dicttoxml.dicttoxml(obj, root=False, attr_type=False).decode('utf-8')
-    return xml
 
 
 @app.route('/convert/crawler_search_id', methods=['POST'])
