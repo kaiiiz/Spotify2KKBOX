@@ -139,7 +139,7 @@ function bindIDToButton() {
                         html = '<ol>'
                         for (let n = 0; n < tracks.length; n++) {
                             const element = tracks[n];
-                            html += "<li>" + element.track.name + "</li>"
+                            html += "<li>" + element.track.name + ' - ' + element.track.album.name + "</li>"
                         }
                         html += '</ol>'
                         detail_div.html(html)

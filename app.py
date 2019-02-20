@@ -1,15 +1,18 @@
-import os, random, string, xmltodict, requests, time, bs4, dicttoxml, json
-from flask import Flask, redirect, url_for, session, request, render_template, jsonify, send_from_directory, Response
+import os, random, string, xmltodict, requests, time, bs4, dicttoxml, json, io
+from flask import Flask, redirect, url_for, session, request, render_template, jsonify, send_from_directory, after_this_request
 from flask_dance.contrib.spotify import make_spotify_blueprint, spotify
 from kkbox_auth import make_kkbox_blueprint
 from config import SPOTIFY_APP_ID, SPOTIFY_APP_SECRET, KKBOX_APP_ID, KKBOX_APP_SECRET
+from werkzeug import secure_filename
 
 # Flask config
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # Disable HTTPS
+KBL_FOLDER = os.path.dirname(os.path.abspath(__file__)) + '/kbl'
 
 # Create Flask Instance
 app = Flask(__name__)
 app.secret_key = 'development'
+app.config['KBL_FOLDER'] = KBL_FOLDER
 
 # OAuth blueprint
 spotify_blueprint = make_spotify_blueprint(
@@ -376,7 +379,7 @@ def index():
     )
 
 
-@app.route('/download/generate_kbl', methods=['POST'])
+@app.route('/download/generate_kbl', methods=['GET', 'POST'])
 def download_generate_kbl():
     playlists = request.json
     playlistcnt = 0
@@ -417,12 +420,36 @@ def download_generate_kbl():
     # 3. replace it
     playlist_xml = '<playlist>' + playlist_xml + '</playlist>'
     kbl_template = kbl_template.replace('<playlist></playlist>', playlist_xml)
-    print(kbl_template)
-    reply = {
-        'status': 'success',
-        'msg': 'generate success',
-    }
+    # 4. save kbl file
+    random_list = random.choices(
+        string.ascii_uppercase + string.digits + string.ascii_lowercase, k=20)
+    filename = 'tmp-' + ''.join(random_list) + '.kbl'
+    filepath = os.path.join(app.config['KBL_FOLDER'], filename)
+    with open(filepath, 'w') as f:
+        f.write(kbl_template)
+    reply = {'msg': 'success', 'name': filename}
     return jsonify(reply=reply)
+
+
+@app.route('/download/<filename>')
+def download_kbl(filename):
+    filename = secure_filename(filename)
+    filepath = os.path.join(app.config['KBL_FOLDER'], filename)
+
+    @after_this_request
+    def remove_kbl(response):
+        try:
+            os.remove(filepath)
+        except Exception as e:
+            print(e)
+        return response
+
+    return send_from_directory(
+        app.config['KBL_FOLDER'],
+        filename,
+        mimetype='text/html',
+        as_attachment=True,
+        attachment_filename='spotify2kkbox.kbl')
 
 
 @app.route('/convert/crawler_search_id', methods=['POST'])

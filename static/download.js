@@ -1,6 +1,7 @@
 $(function () {
     $('#download_btn').click(function () {
         playlists = get_all_playlists()
+        if (playlists.length == 0) return;
         $.ajax({
             type: 'POST',
             url: '/download/generate_kbl',
@@ -9,7 +10,7 @@ $(function () {
             cache: false,
             processData: false,
             success: function (data) {
-                $('#download_detail').html(data.reply.msg)
+                window.location.replace('download/' + data.reply.name)
             },
         })
     });
