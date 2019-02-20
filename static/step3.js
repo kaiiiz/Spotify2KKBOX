@@ -1,44 +1,36 @@
-/*
- * Function of press the 'Get playlist' button
- * This function bind button to an JQuery AJAX function
- * After click the button, AJAX will query /get/spotify/playlist and get the playlists of user
- */
 $(function () {
-    $('#get_sp_playlist').bind(
-        'click',
-        function () {
-            $.getJSON(
-                $SCRIPT_ROOT + '/get/spotify/playlist', //url
-                {}, // url parameter
-                function (data) {
-                    if (data.status == 'failed') {
-                        $("#spotify_playlist").html('<p>Check auth failed! Please login spotify!</p>')
-                        return
-                    }
-                    playlist = data.playlist.items
-                    html = ''
-                    for (let i = 0; i < playlist.length; i++) {
-                        const element = playlist[i];
-                        /*
-                         * <input type="checkbox" name="sp_playlist" value="{{ playlist_id }}">
-                         * {{ Playlist name }}
-                         * <a name="sp_playlist_detail_btn" href="#" id="{{ playlist_id }}">Detail</a>
-                         * <br>
-                         * <div id="sp_playlist_track_detail_{{ playlist_id }}"></div>
-                         */
-                        html += "<div>"
-                        html += "<input type='checkbox' name='" + element.name + "' value='" + element.id + "'>" + element.name;
-                        html += "<a name='sp_playlist_detail_btn' href=# id='" + element.id + "'>Detail</a></br>";
-                        html += "<div id='sp_playlist_track_detail_" + element.id + "'></div>";
-                        html += "</div>"
-                    }
-                    $("#spotify_playlist").html(html)
-                    bindIDToButton();
-                } // return function
-            );
-            return false;
-        }
-    );
+    $('#get_sp_playlist').click(function () {
+        $.ajax({
+            type: 'GET',
+            url: '/get/spotify/playlist',
+            success: function (data) {
+                if (data.status == 'failed') {
+                    $("#spotify_playlist").html('<p>Check auth failed! Please login spotify!</p>')
+                    return
+                }
+                playlist = data.playlist.items
+                html = ''
+                for (let i = 0; i < playlist.length; i++) {
+                    const element = playlist[i];
+                    /*
+                     * <input type="checkbox" name="sp_playlist" value="{{ playlist_id }}">
+                     * {{ Playlist name }}
+                     * <a name="sp_playlist_detail_btn" href="#" id="{{ playlist_id }}">Detail</a>
+                     * <br>
+                     * <div id="sp_playlist_track_detail_{{ playlist_id }}"></div>
+                     */
+                    html += "<div>"
+                    html += "<input type='checkbox' name='" + element.name + "' value='" + element.id + "'>" + element.name;
+                    html += "<a name='sp_playlist_detail_btn' href=# id='" + element.id + "'>Detail</a></br>";
+                    html += "<div id='sp_playlist_track_detail_" + element.id + "'></div>";
+                    html += "</div>"
+                }
+                $("#spotify_playlist").html(html)
+                bindIDToButton();
+            } // return function
+        });
+        return false;
+    });
 });
 /*
  * Function of press the 'Detail' button next to the playlist name

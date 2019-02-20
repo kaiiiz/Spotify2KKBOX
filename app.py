@@ -418,7 +418,6 @@ def download_generate_kbl():
             '<playlist_data></playlist_data>', playlist_data_xml)
         playlist_xml += playlist_template
     # 3. replace it
-    playlist_xml = '<playlist>' + playlist_xml + '</playlist>'
     kbl_template = kbl_template.replace('<playlist></playlist>', playlist_xml)
     # 4. save kbl file
     random_list = random.choices(
@@ -515,6 +514,7 @@ def upload_kbl():
         'package_packdate': None,
     }
     file = request.files.get('file')
+    print(file)
     if not file:
         kbl['status'] = "Upload failed! File doesn't exist"
     elif not allowed_file(file.filename):
