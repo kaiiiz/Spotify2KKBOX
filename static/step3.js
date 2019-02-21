@@ -3,71 +3,32 @@ $(function () {
         $.ajax({
             type: 'GET',
             url: '/get/spotify_playlists',
-            success: function (response) {
-                if (response.status == 'failed') {
-                    $("#spotify_playlist").html('<p>Check auth failed! Please login spotify!</p>')
+            success: function (data) {
+                status = data.response.status
+                msg = data.response.msg
+                data = data.response.data
+                if (status == 'Failed') {
+                    $("#spotify_playlist").html('<p>Failed - ' + msg + '</p>')
                     return
                 }
-                playlist = response.playlist.items
+                playlists = data.playlists.items
                 html = ''
-                for (let i = 0; i < playlist.length; i++) {
-                    const element = playlist[i];
-                    /*
-                     * <input type="checkbox" name="sp_playlist" value="{{ playlist_id }}">
-                     * {{ Playlist name }}
-                     * <a name="sp_playlist_detail_btn" href="#" id="{{ playlist_id }}">Detail</a>
-                     * <br>
-                     * <div id="sp_playlist_track_detail_{{ playlist_id }}"></div>
-                     */
-                    html += "<div>"
-                    html += "<input type='checkbox' name='" + element.name + "' value='" + element.id + "'>" + element.name;
-                    html += "<a name='sp_playlist_detail_btn' href=# id='" + element.id + "'>Detail</a></br>";
-                    html += "<div id='sp_playlist_track_detail_" + element.id + "'></div>";
-                    html += "</div>"
+                /*
+                 * <input type="checkbox" name="sp_playlist" value="{{ playlist_id }}">
+                 * {{ playlist_name }}
+                 */
+                for (let i = 0; i < playlists.length; i++) {
+                    const element = playlists[i]
+                    html += `<div>`
+                    html += `<input type='checkbox' name='${element.name}' value='${element.id}'>`
+                    html += element.name
+                    html += `</div>`
                 }
                 $("#spotify_playlist").html(html)
-                bindIDToButton();
-            } // return function
+            }
         });
-        return false;
     });
 });
-function bindIDToButton() {
-    btn_list = $('a[name="sp_playlist_detail_btn"]')
-    btn_num = $('a[name="sp_playlist_detail_btn"]').length
-    for (let i = 0; i < btn_num; i++) {
-        const btn_id = btn_list[i].id
-        btn = 'a#' + btn_id
-        $(btn).bind(
-            'click',
-            function () {
-                $.getJSON(
-                    $SCRIPT_ROOT + '/get/spotify_playlist_tracks', //url
-                    {
-                        playlist_id: btn_id
-                    }, // url parameter
-                    function (data) {
-                        detail_div = $('div#sp_playlist_track_detail_' + btn_id)
-                        tracks = data.tracks // a list contain every songs in playlist
-                        html = '<ol>'
-                        for (let n = 0; n < tracks.length; n++) {
-                            const element = tracks[n];
-                            html += "<li>" + element.track.name + ' - ' + element.track.album.name + "</li>"
-                        }
-                        html += '</ol>'
-                        detail_div.html(html)
-                    } // return function
-                );
-                return false;
-            }
-        )
-    }
-}
-/*
- * Function of press the 'Search in KKBOX' button
- * This function bind button to an JQuery AJAX function
- * After click the button, AJAX will post /search/all_tracks
- */
 $(function () {
     $('#search_btn').click(function () {
         var form_data = new FormData($('#spotify_playlist')[0]);

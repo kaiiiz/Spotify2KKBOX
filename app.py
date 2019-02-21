@@ -50,11 +50,11 @@ def checkauth_spotify():
     if token:
         url = 'https://api.spotify.com/v1/me'
         headers = {'Authorization': 'Bearer ' + token}
-        for _ in range(5):  # Retry 5 times if connection error
+        for i in range(5):  # Retry 5 times if connection error
             try:
                 req = requests.get(url, headers=headers)
-            except requests.exceptions.ConnectionError as e:
-                app.logger.error('%s', e)
+            except requests.exceptions.ConnectionError:
+                app.logger.error('Connection error, retry %d times' % i)
                 continue
             else:
                 if req.status_code == 200:
@@ -72,11 +72,11 @@ def checkauth_kkbox():
     if token:
         url = 'https://api.kkbox.com/v1.1/charts'
         headers = {'Authorization': 'Bearer ' + token, 'territory': 'TW'}
-        for _ in range(5):  # Retry 5 times if connection error
+        for i in range(5):  # Retry 5 times if connection error
             try:
                 req = requests.get(url, headers=headers)
-            except requests.exceptions.ConnectionError as e:
-                app.logger.error('%s', e)
+            except requests.exceptions.ConnectionError:
+                app.logger.error('Connection error, retry %d times' % i)
                 continue
             else:
                 if req.status_code == 200:
@@ -582,13 +582,25 @@ def login():
 
 
 @app.route('/get/spotify_playlists')
-def get_spotify_playlist():
+def get_spotify_playlists():
     if not checkauth_spotify():
-        return jsonify(status='failed')
+        app.logger.error('Spotify check auth failed')
+        response = {
+            'status': 'Failed',
+            'msg': "Spotify check auth failed, please login spotify.",
+            'data': None,
+        }
+        return jsonify(response=response)
     url = 'https://api.spotify.com/v1/me/playlists'
     headers = {'Authorization': 'Bearer ' + spotify.access_token}
-    playlist = requests.get(url, headers=headers).json()
-    return jsonify(playlist=playlist)
+    response = {
+        'status': 'Success',
+        'msg': "Get playlists success",
+        'data': {
+            'playlists': requests.get(url, headers=headers).json()
+        }
+    }
+    return jsonify(response=response)
 
 
 @app.route('/get/spotify_playlist_tracks')
