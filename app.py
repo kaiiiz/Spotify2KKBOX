@@ -515,41 +515,59 @@ def search_trackdata_in_kkbox():
 
 @app.route('/upload_kbl', methods=['POST'])
 def upload_kbl():
-    kbl = {
-        'kkbox_ver': None,
-        'package_ver': None,
-        'package_descr': None,
-        'package_packdate': None,
+    response = {
+        'status': None,
+        'msg': None,
+        'data': {
+            'kkbox_ver': None,
+            'package_ver': None,
+            'package_descr': None,
+            'package_packdate': None,
+        }
     }
     file = request.files.get('file')
     if not file:
-        kbl['status'] = "Upload failed! File doesn't exist"
+        app.logger.error("Upload failed! File doesn't exist")
+        response['status'] = "Failed"
+        response['msg'] = "File doesn't exist"
     elif not allowed_file(file.filename):
-        kbl['status'] = "Upload failed! Unsupport file format"
+        app.logger.error("Upload failed! Unsupport file format")
+        response['status'] = "Failed"
+        response['msg'] = "Unsupport file format"
     else:
         xml = file.read().decode('utf-8')
         try:
             content = xmltodict.parse(xml)
             content = content.get('utf-8_data').get('kkbox_package')
         except xmltodict.expat.ExpatError:
-            kbl['status'] = 'Upload failed! kbl file parse failed!'
-            return jsonify(kbl=kbl)
+            app.logger.error("Upload failed! kbl file parse failed!")
+            response['status'] = "Failed"
+            response['msg'] = "kbl file parse failed!"
         else:
-            kkbox_ver = content.get('kkbox_ver')
-            package_ver = content.get('package').get('ver')
-            package_descr = content.get('package').get('descr')
-            package_packdate = content.get('package').get('packdate')
-            session['kbl_kkbox_ver'] = kkbox_ver or ''
-            session['kbl_package_ver'] = package_ver or ''
-            session['kbl_package_descr'] = package_descr or ''
-            session['kbl_package_packdate'] = package_packdate or ''
-            session['kbl_status'] = 'Success'
-            kbl['kkbox_ver'] = kkbox_ver or ''
-            kbl['package_ver'] = package_ver or ''
-            kbl['package_descr'] = package_descr or ''
-            kbl['package_packdate'] = package_packdate or ''
-            kbl['status'] = 'Success'
-    return jsonify(kbl=kbl)
+            kkbox_ver = content.get('kkbox_ver') or ''
+            package_ver = content.get('package').get('ver') or ''
+            package_descr = content.get('package').get('descr') or ''
+            package_packdate = content.get('package').get('packdate') or ''
+            update_ses = {
+                'kbl_status': 'Success',
+                'kbl_kkbox_ver': kkbox_ver,
+                'kbl_package_ver': package_ver,
+                'kbl_package_descr': package_descr,
+                'kbl_package_packdate': package_packdate,
+            }
+            session.update(update_ses)
+            update_resp = {
+                'status': "Success",
+                'msg': "Upload success!",
+                'data': {
+                    'kkbox_ver': kkbox_ver,
+                    'package_ver': package_ver,
+                    'package_descr': package_descr,
+                    'package_packdate': package_packdate,
+                }
+            }
+            response.update(update_resp)
+    return jsonify(response=response)
 
 
 @app.route('/login', methods=['POST'])

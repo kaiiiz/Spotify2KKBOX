@@ -9,12 +9,16 @@ $(function () {
             processData: false,
             contentType: false,
             success: function (data) {
-                $('span#kbl_status').html(data.kbl.status)
-                if (data.kbl.status == "Success") {
-                    $('span#kbl_kkbox_ver').html(data.kbl.kkbox_ver)
-                    $('span#kbl_package_ver').html(data.kbl.package_ver)
-                    $('span#kbl_package_descr').html(data.kbl.package_descr)
-                    $('span#kbl_package_packdate').html(data.kbl.package_packdate)
+                response = data.response
+                if (response.status == "Success") {
+                    $('#kbl_status').html(response.status)
+                    $('#kbl_kkbox_ver').html(response.data.kkbox_ver)
+                    $('#kbl_package_ver').html(response.data.package_ver)
+                    $('#kbl_package_descr').html(response.data.package_descr)
+                    $('#kbl_package_packdate').html(response.data.package_packdate)
+                }
+                else if (response.status == "Failed") {
+                    $('#kbl_status').html(response.status + ' - ' + response.msg)
                 }
             },
         });
