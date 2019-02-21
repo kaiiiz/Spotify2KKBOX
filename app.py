@@ -90,20 +90,34 @@ def checkauth_kkbox():
 
 
 def all_tracks_in(playlist_id):
-    url = 'https://api.spotify.com/v1/playlists/' + playlist_id + '/tracks'
-    headers = {'Authorization': 'Bearer ' + spotify.access_token}
-    tracks_raw = requests.get(url, headers=headers).json()
-    tracks = tracks_raw.get('items')
-    """
-    Spotify limits 100 songs in each query.
-    So if playlist contains more than 100 songs, it must be queried multiple times to get whole playlists.
-    """
-    while tracks_raw.get('next'):
-        tracks_raw = requests.get(
-            tracks_raw.get('next'), headers=headers).json()
-        tracks_next = tracks_raw.get('items')
-        tracks += tracks_next
-    return tracks
+    if not checkauth_spotify():
+        app.logger.error('Spotify check auth failed')
+        response = {
+            'status': 'Failed',
+            'msg': "Spotify check auth failed, please login spotify.",
+            'data': None,
+        }
+        return response
+    else:
+        """
+        Spotify limits 100 songs in each query.
+        So if playlist contains more than 100 songs, it must be queried multiple times to get whole playlists.
+        """
+        url = 'https://api.spotify.com/v1/playlists/' + playlist_id + '/tracks'
+        headers = {'Authorization': 'Bearer ' + spotify.access_token}
+        tracks_raw = requests.get(url, headers=headers).json()
+        tracks = tracks_raw.get('items')
+        while tracks_raw.get('next'):
+            tracks_raw = requests.get(
+                tracks_raw.get('next'), headers=headers).json()
+            tracks_next = tracks_raw.get('items')
+            tracks += tracks_next
+        response = {
+            'status': 'Success',
+            'msg': "Get all tracks in playlist success",
+            'data': tracks,
+        }
+        return response
 
 
 def search_trackdata_in_kk(name, artist, album):
@@ -488,14 +502,28 @@ def convert_crawler_search_id():
         return jsonify(kbl=kbl)
 
 
-@app.route('/search/all_tracks', methods=['POST'])
-def search_all_tracks():
+@app.route('/search/all_tracks_in_sp', methods=['POST'])
+def search_all_tracks_in_sp():
     playlists = request.form.to_dict()
     sp_playlists = []
     for p_name, p_id in playlists.items():
-        tracks = all_tracks_in(p_id)
-        sp_playlists.append([p_name, tracks])
-    return jsonify(sp_playlists=sp_playlists)
+        playlist = all_tracks_in(p_id)
+        if playlist['status'] == 'Failed':
+            app.logger.error('Get all tracks failed - %s' % playlist['msg'])
+            response = {
+                'status': 'Failed',
+                'msg': playlist['msg'],
+                'data': None,
+            }
+            return jsonify(response=response)
+        else:
+            sp_playlists.append([p_name, playlist['data']])
+    response = {
+        'status': 'Success',
+        'msg': 'Search all tracks in spotify success',
+        'data': sp_playlists,
+    }
+    return jsonify(response=response)
 
 
 @app.route('/search/trackdata_in_kkbox', methods=['POST'])
@@ -591,16 +619,17 @@ def get_spotify_playlists():
             'data': None,
         }
         return jsonify(response=response)
-    url = 'https://api.spotify.com/v1/me/playlists'
-    headers = {'Authorization': 'Bearer ' + spotify.access_token}
-    response = {
-        'status': 'Success',
-        'msg': "Get playlists success",
-        'data': {
-            'playlists': requests.get(url, headers=headers).json()
+    else:
+        url = 'https://api.spotify.com/v1/me/playlists'
+        headers = {'Authorization': 'Bearer ' + spotify.access_token}
+        response = {
+            'status': 'Success',
+            'msg': "Get playlists success",
+            'data': {
+                'playlists': requests.get(url, headers=headers).json()
+            }
         }
-    }
-    return jsonify(response=response)
+        return jsonify(response=response)
 
 
 @app.route('/get/spotify_playlist_tracks')

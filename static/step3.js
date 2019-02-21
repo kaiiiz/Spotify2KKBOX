@@ -4,15 +4,15 @@ $(function () {
             type: 'GET',
             url: '/get/spotify_playlists',
             success: function (data) {
-                status = data.response.status
-                msg = data.response.msg
-                data = data.response.data
+                var status = data.response.status
+                var msg = data.response.msg
+                var data = data.response.data
                 if (status == 'Failed') {
-                    $("#spotify_playlist").html('<p>Failed - ' + msg + '</p>')
+                    $("#spotify_playlists").html('<p>Failed - ' + msg + '</p>')
                     return
                 }
-                playlists = data.playlists.items
-                html = ''
+                var playlists = data.playlists.items
+                var html = ''
                 /*
                  * <input type="checkbox" name="sp_playlist" value="{{ playlist_id }}">
                  * {{ playlist_name }}
@@ -24,36 +24,45 @@ $(function () {
                     html += element.name
                     html += `</div>`
                 }
-                $("#spotify_playlist").html(html)
+                $("#spotify_playlists").html(html)
             }
         });
     });
 });
 $(function () {
     $('#search_btn').click(function () {
-        var form_data = new FormData($('#spotify_playlist')[0]);
+        var form_data = new FormData($('#spotify_playlists')[0]);
+        // Create frame
+        $('#search_detail').empty()
+        var html = ''
+        var playlist_cnt = 0
+        for (var pair of form_data.entries()) {
+            playlist_name = pair[0]
+            html += `<div id="search_log_${playlist_cnt}">`
+            html += `<h4>${playlist_name}</h4>`
+            html += `<h5>Success</h5>`
+            html += `<form id="search_success_${playlist_cnt}" name="${playlist_name}"></form>`
+            html += `<h5>Failed</h5>`
+            html += `<ol id="search_failed_${playlist_cnt}"></ol>`
+            html += `</div>`
+            playlist_cnt += 1
+        }
+        $('#search_detail').html(html)
         $.ajax({
             type: 'POST',
-            url: '/search/all_tracks',
+            url: '/search/all_tracks_in_sp',
             data: form_data,
             contentType: false,
             cache: false,
             processData: false,
             success: function (data) {
-                var sp_playlists = data.sp_playlists
-                var log_html = ''
-                for (let i = 0; i < sp_playlists.length; i++) {
-                    log_html += '<div id="search_log_' + i + '">'
-                    log_html += '<h4>' + sp_playlists[i][0] + '</h4>'
-                    log_html += '<h5>Success</h5>'
-                    log_html += '<form id="search_success_' + i + '" name="' + sp_playlists[i][0] + '">'
-                    log_html += '</form>'
-                    log_html += '<h5>Failed</h5>'
-                    log_html += '<ol id="search_failed_' + i + '">'
-                    log_html += '</ol>'
-                    log_html += '</div>'
+                var status = data.response.status
+                var msg = data.response.msg
+                var sp_playlists = data.response.data
+                if (status == "Failed") {
+                    $("#search_detail").html('<p>Failed - ' + msg + '</p>')
+                    return
                 }
-                $('#search_detail').html(log_html)
                 var playlist_cnt = 0
                 sp_playlists.forEach(sp_playlist => {
                     var done = search_in_kkbox(sp_playlist, playlist_cnt)
