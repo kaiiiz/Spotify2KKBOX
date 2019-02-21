@@ -1,9 +1,12 @@
-import os, random, string, xmltodict, requests, time, bs4, dicttoxml, json, io
 from flask import Flask, redirect, url_for, session, request, render_template, jsonify, send_from_directory, after_this_request
 from flask_dance.contrib.spotify import make_spotify_blueprint, spotify
 from kkbox_auth import make_kkbox_blueprint
 from config import SPOTIFY_APP_ID, SPOTIFY_APP_SECRET, KKBOX_APP_ID, KKBOX_APP_SECRET
 from werkzeug import secure_filename
+import os, random, string, time, json, io, logging
+import xmltodict, dicttoxml
+import requests
+import bs4
 
 # Flask config
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # Disable HTTPS
@@ -13,6 +16,14 @@ KBL_FOLDER = os.path.dirname(os.path.abspath(__file__)) + '/kbl'
 app = Flask(__name__)
 app.secret_key = 'development'
 app.config['KBL_FOLDER'] = KBL_FOLDER
+
+# Logging config
+handler = logging.FileHandler('app.log', encoding='UTF-8')
+logging_format = logging.Formatter(
+    '%(asctime)s - %(levelname)s - %(filename)s - %(funcName)s - %(lineno)s - %(message)s'
+)
+handler.setFormatter(logging_format)
+app.logger.addHandler(handler)
 
 # OAuth blueprint
 spotify_blueprint = make_spotify_blueprint(
@@ -34,51 +45,48 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] == 'kbl'
 
 
-def checkauth(platform, times):
-    if platform == 'spotify':
-        token = spotify.access_token
-        if token:
-            url = 'https://api.spotify.com/v1/me'
-            headers = {'Authorization': 'Bearer ' + token}
+def checkauth_spotify():
+    token = spotify.access_token
+    if token:
+        url = 'https://api.spotify.com/v1/me'
+        headers = {'Authorization': 'Bearer ' + token}
+        for _ in range(5):  # Retry 5 times if connection error
             try:
                 req = requests.get(url, headers=headers)
-            except requests.exceptions.ConnectionError:
-                print('[checkauth] ConnectionError: retry %d times' % times)
-                checkauth('spotify', times + 1)
-                if times >= 5:
-                    return False
-            except Exception as e:
-                print('[checkauth] failed: ' + str(e))
-                return False
+            except requests.exceptions.ConnectionError as e:
+                app.logger.error('%s', e)
+                continue
             else:
                 if req.status_code == 200:
                     return True
                 else:
+                    app.logger.error('Spotify request failed')
                     return False
-        else:
-            return False
-    elif platform == 'kkbox':
-        token = kkbox_blueprint.session.access_token
-        if token:
-            url = 'https://api.kkbox.com/v1.1/charts'
-            headers = {'Authorization': 'Bearer ' + token, 'territory': 'TW'}
+    else:
+        app.logger.error("Spotify token doesn't exist")
+        return False
+
+
+def checkauth_kkbox():
+    token = kkbox_blueprint.session.access_token
+    if token:
+        url = 'https://api.kkbox.com/v1.1/charts'
+        headers = {'Authorization': 'Bearer ' + token, 'territory': 'TW'}
+        for _ in range(5):  # Retry 5 times if connection error
             try:
                 req = requests.get(url, headers=headers)
-            except requests.exceptions.ConnectionError:
-                print('[checkauth] ConnectionError: retry %d times' % times)
-                checkauth('kkbox', times + 1)
-                if times >= 5:
-                    return False
-            except Exception as e:
-                print('[checkauth] failed: ' + str(e))
-                return False
+            except requests.exceptions.ConnectionError as e:
+                app.logger.error('%s', e)
+                continue
             else:
                 if req.status_code == 200:
                     return True
                 else:
+                    app.logger.error('KKBOX request failed')
                     return False
-        else:
-            return False
+    else:
+        app.logger.error("KKBOX token doesn't exist")
+        return False
 
 
 def all_tracks_in(playlist_id):
@@ -99,7 +107,7 @@ def all_tracks_in(playlist_id):
 
 
 def search_trackdata_in_kk(name, artist, album):
-    if checkauth('kkbox', 0):
+    if checkauth_kkbox():
         headers = {
             'Authorization': 'Bearer ' + kkbox_blueprint.session.access_token
         }
@@ -164,7 +172,7 @@ def search_trackdata_in_kk(name, artist, album):
 
 
 def search_trackdata_in_kk_blurred(name, artist, album):
-    if checkauth('kkbox', 0):
+    if checkauth_kkbox():
         headers = {
             'Authorization': 'Bearer ' + kkbox_blueprint.session.access_token
         }
@@ -235,7 +243,7 @@ def search_trackdata_in_kk_blurred(name, artist, album):
 
 
 def get_trackdata_in_kk(track_id):
-    if checkauth('kkbox', 0):
+    if checkauth_kkbox():
         headers = {
             'Authorization': 'Bearer ' + kkbox_blueprint.session.access_token
         }
@@ -356,8 +364,8 @@ def get_kbl_songdata_template(song_pathname, song_artist_id, song_album_id,
 # Web page
 @app.route('/')
 def index():
-    spotify_outh_status = True if checkauth('spotify', 0) else False
-    kkbox_outh_status = True if checkauth('kkbox', 0) else False
+    spotify_outh_status = True if checkauth_spotify() else False
+    kkbox_outh_status = True if checkauth_kkbox() else False
     kbl_kkbox_ver = session[
         'kbl_kkbox_ver'] if 'kbl_kkbox_ver' in session else 'Unknown'
     kbl_package_ver = session[
@@ -514,7 +522,6 @@ def upload_kbl():
         'package_packdate': None,
     }
     file = request.files.get('file')
-    print(file)
     if not file:
         kbl['status'] = "Upload failed! File doesn't exist"
     elif not allowed_file(file.filename):
@@ -556,9 +563,9 @@ def login():
         return redirect(url_for("index"))
 
 
-@app.route('/get/spotify/playlist')
+@app.route('/get/spotify_playlists')
 def get_spotify_playlist():
-    if not checkauth('spotify', 0):
+    if not checkauth_spotify():
         return jsonify(status='failed')
     url = 'https://api.spotify.com/v1/me/playlists'
     headers = {'Authorization': 'Bearer ' + spotify.access_token}
@@ -566,7 +573,7 @@ def get_spotify_playlist():
     return jsonify(playlist=playlist)
 
 
-@app.route('/get/spotify/playlist/track')
+@app.route('/get/spotify_playlist_tracks')
 def get_spotify_playlist_track():
     playlist_id = request.args.get('playlist_id', '', type=str)
     tracks = all_tracks_in(playlist_id)

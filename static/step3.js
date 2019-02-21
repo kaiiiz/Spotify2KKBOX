@@ -2,13 +2,13 @@ $(function () {
     $('#get_sp_playlist').click(function () {
         $.ajax({
             type: 'GET',
-            url: '/get/spotify/playlist',
-            success: function (data) {
-                if (data.status == 'failed') {
+            url: '/get/spotify_playlists',
+            success: function (response) {
+                if (response.status == 'failed') {
                     $("#spotify_playlist").html('<p>Check auth failed! Please login spotify!</p>')
                     return
                 }
-                playlist = data.playlist.items
+                playlist = response.playlist.items
                 html = ''
                 for (let i = 0; i < playlist.length; i++) {
                     const element = playlist[i];
@@ -32,11 +32,6 @@ $(function () {
         return false;
     });
 });
-/*
- * Function of press the 'Detail' button next to the playlist name
- * This function bind all playlist-id to button
- * After click the button, AJAX will query /get/spotify/playlist/track and get all tracks of playlist
- */
 function bindIDToButton() {
     btn_list = $('a[name="sp_playlist_detail_btn"]')
     btn_num = $('a[name="sp_playlist_detail_btn"]').length
@@ -47,7 +42,7 @@ function bindIDToButton() {
             'click',
             function () {
                 $.getJSON(
-                    $SCRIPT_ROOT + '/get/spotify/playlist/track', //url
+                    $SCRIPT_ROOT + '/get/spotify_playlist_tracks', //url
                     {
                         playlist_id: btn_id
                     }, // url parameter

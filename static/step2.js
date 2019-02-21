@@ -5,7 +5,9 @@ $(function () {
             type: 'POST',
             url: '/upload_kbl',
             data: form_data,
+            cache: false,
             processData: false,
+            contentType: false,
             success: function (data) {
                 $('span#kbl_status').html(data.kbl.status)
                 if (data.kbl.status == "Success") {
