@@ -327,24 +327,6 @@ def search_trackdata_in_kk_blurred(name, artist, album):
             return response
 
 
-def get_trackdata_in_kk(track_id):
-    if checkauth_kkbox():
-        headers = {
-            'Authorization': 'Bearer ' + kkbox_blueprint.session.access_token
-        }
-    else:
-        return None
-
-    url = 'https://api.kkbox.com/v1.1/tracks/' + track_id
-    try:
-        req_trackdata = requests.get(url, headers=headers).json()
-    except Exception as e:
-        print('[get_trackdata_in_kk] failed: ' + str(e))
-        return None
-    else:
-        return req_trackdata
-
-
 def get_kbl_pathname(song_name_url):
     ses = requests.Session()
     ses.mount('http://', HTTPAdapter(max_retries=5))
@@ -402,7 +384,7 @@ def get_kbl_albumid(song_album_url):
     return None
 
 
-def get_kbl_template(playlistcnt, songcnt):
+def gen_kbl_template(playlistcnt, songcnt):
     if not (session.get('kbl_kkbox_ver') and session.get('kbl_package_ver') and
             session.get('kbl_package_packdate') and playlistcnt and songcnt):
         return None
@@ -427,7 +409,7 @@ def get_kbl_template(playlistcnt, songcnt):
     return xml
 
 
-def get_kbl_playlist_template(playlist_id, playlist_name):
+def gen_kbl_playlist_template(playlist_id, playlist_name):
     template = {
         "playlist": {
             "playlist_id": playlist_id,
@@ -442,7 +424,7 @@ def get_kbl_playlist_template(playlist_id, playlist_name):
     return xml
 
 
-def get_kbl_songdata_template(song_pathname, song_artist_id, song_album_id,
+def gen_kbl_songdata_template(song_pathname, song_artist_id, song_album_id,
                               song_song_idx):
     template = {
         "song_data": {
@@ -496,34 +478,40 @@ def download_generate_kbl():
 
     # 1. use playlist_xml replace '<playlist></playlist>'
     playlist_xml = ''
-    kbl_template = get_kbl_template(playlistcnt, songcnt)
+    kbl_template = gen_kbl_template(playlistcnt, songcnt)
     if not kbl_template:  # generate failed
-        reply = {
-            'status':
-            'failed',
-            'msg':
-            'generate failed, please upload kbl file to update required information.'
+        app.logger.error('generate failed, need kbl attributes')
+        response = {
+            'status': 'Failed',
+            'msg': 'generate failed, need kbl attributes',
+            'filename': None,
         }
-        return jsonify(reply=reply)
+        return jsonify(response=response)
+
     # 2. generate playlist_xml
     for idx, p in enumerate(playlists):
         p_name = p[0]
-        # 1. use playlist_data_xml replace '<playlist_data></playlist_data>'
+
+        # A. use playlist_data_xml replace '<playlist_data></playlist_data>'
         playlist_data_xml = ''
-        playlist_template = get_kbl_playlist_template(idx + 1, p_name)
-        # 2. generate playlist_data_xml
+        playlist_template = gen_kbl_playlist_template(idx + 1, p_name)
+
+        # B. generate playlist_data_xml
         for track in p[1]:
-            song_data = get_kbl_songdata_template(
+            song_data = gen_kbl_songdata_template(
                 track['song_pathname'], track['song_artist_id'],
                 track['song_album_id'], track['song_song_idx'])
             playlist_data_xml += song_data
         playlist_data_xml = '<playlist_data>' + playlist_data_xml + '</playlist_data>'
-        # 3. replace it
+
+        # C. replace it
         playlist_template = playlist_template.replace(
             '<playlist_data></playlist_data>', playlist_data_xml)
         playlist_xml += playlist_template
+
     # 3. replace it
     kbl_template = kbl_template.replace('<playlist></playlist>', playlist_xml)
+
     # 4. save kbl file
     random_list = random.choices(
         string.ascii_uppercase + string.digits + string.ascii_lowercase, k=20)
@@ -531,8 +519,14 @@ def download_generate_kbl():
     filepath = os.path.join(app.config['KBL_FOLDER'], filename)
     with open(filepath, 'w') as f:
         f.write(kbl_template)
-    reply = {'msg': 'success', 'name': filename}
-    return jsonify(reply=reply)
+
+    # 5. return filename
+    response = {
+        'status': 'Success',
+        'msg': 'generate success',
+        'filename': filename,
+    }
+    return jsonify(response=response)
 
 
 @app.route('/download/<filename>')
@@ -554,31 +548,6 @@ def download_kbl(filename):
         mimetype='text/html',
         as_attachment=True,
         attachment_filename='spotify2kkbox.kbl')
-
-
-@app.route('/convert/crawler_search_id', methods=['POST'])
-def convert_crawler_search_id():
-    track_id = request.json['track_id']
-    track_data = get_trackdata_in_kk(track_id)
-    name_url = track_data['url']
-    artist_url = track_data['album']['artist']['url']
-    album_url = track_data['album']['url']
-    kbl_data = {}
-    kbl_data['song_pathname'] = get_kbl_pathname(name_url)
-    kbl_data['song_artist_id'] = get_kbl_artistid(artist_url)
-    kbl_data['song_album_id'] = get_kbl_albumid(album_url)
-    kbl_data['song_song_idx'] = track_data['track_number']
-    if not (kbl_data['song_pathname'] and kbl_data['song_artist_id']
-            and kbl_data['song_album_id']):
-        kbl = {'status': 'failed', 'track_data': track_data}
-        return jsonify(kbl=kbl)
-    else:
-        kbl = {
-            'status': 'success',
-            'kbl_data': kbl_data,
-            'track_data': track_data
-        }
-        return jsonify(kbl=kbl)
 
 
 @app.route('/search/all_tracks_in_sp', methods=['POST'])

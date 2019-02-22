@@ -75,7 +75,6 @@ $(function () {
 function search_in_kkbox(sp_playlist, playlist_cnt) {
     playlist_name = sp_playlist[0]
     sp_playlist[1].forEach(track => {
-        console.log(track)
         $.ajax({
             type: 'POST',
             url: '/search/kbl_attribute',
@@ -88,7 +87,6 @@ function search_in_kkbox(sp_playlist, playlist_cnt) {
                 var msg = data.response.msg
                 var track_data = data.response.data.track_data
                 var kbl_attr = data.response.data.kbl_attr
-                console.log(status, msg, track_data, kbl_attr)
                 if (status == 'Success') {
                     var success_log = ''
                     var track_name = track_data['name']
