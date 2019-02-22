@@ -2,5 +2,5 @@ Pipfile*
 __pycache__/
 .vscode/
 config.py
-app.log
+log/
 kbl/

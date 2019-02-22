@@ -5,6 +5,7 @@ from config import SPOTIFY_APP_ID, SPOTIFY_APP_SECRET, KKBOX_APP_ID, KKBOX_APP_S
 from werkzeug import secure_filename
 from requests.adapters import HTTPAdapter
 import os, random, string, time, json, io, logging
+import logging.handlers
 import xmltodict, dicttoxml
 import requests
 import bs4
@@ -19,7 +20,9 @@ app.secret_key = 'development'
 app.config['KBL_FOLDER'] = KBL_FOLDER
 
 # Logging config
-handler = logging.FileHandler('app.log', encoding='UTF-8')
+handler = logging.handlers.RotatingFileHandler(
+    'log/app.log', maxBytes=104857600, backupCount=20
+)
 logging_format = logging.Formatter(
     '%(asctime)s - %(levelname)s - %(filename)s - %(funcName)s - %(lineno)s - %(message)s'
 )
@@ -539,7 +542,7 @@ def download_kbl(filename):
         try:
             os.remove(filepath)
         except Exception as e:
-            print(e)
+            app.log.error('%s' % e)
         return response
 
     return send_from_directory(
