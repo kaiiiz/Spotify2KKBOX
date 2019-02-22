@@ -75,10 +75,11 @@ $(function () {
 function search_in_kkbox(sp_playlist, playlist_cnt) {
     playlist_name = sp_playlist[0]
     sp_playlist[1].forEach(track => {
+        console.log(track)
         $.ajax({
             type: 'POST',
-            url: '/search/trackdata_in_kkbox',
-            data: JSON.stringify({ 'data': track }),
+            url: '/search/kbl_attribute',
+            data: JSON.stringify({ 'sp_data': track }),
             contentType: 'application/json; charset=utf-8',
             cache: false,
             processData: false,

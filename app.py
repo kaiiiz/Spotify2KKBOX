@@ -3,6 +3,7 @@ from flask_dance.contrib.spotify import make_spotify_blueprint, spotify
 from kkbox_auth import make_kkbox_blueprint
 from config import SPOTIFY_APP_ID, SPOTIFY_APP_SECRET, KKBOX_APP_ID, KKBOX_APP_SECRET
 from werkzeug import secure_filename
+from requests.adapters import HTTPAdapter
 import os, random, string, time, json, io, logging
 import xmltodict, dicttoxml
 import requests
@@ -50,18 +51,20 @@ def checkauth_spotify():
     if token:
         url = 'https://api.spotify.com/v1/me'
         headers = {'Authorization': 'Bearer ' + token}
-        for i in range(5):  # Retry 5 times if connection error
-            try:
-                req = requests.get(url, headers=headers)
-            except requests.exceptions.ConnectionError:
-                app.logger.error('Connection error, retry %d times' % i)
-                continue
+        ses = requests.Session()
+        ses.mount('http://', HTTPAdapter(max_retries=5))
+        ses.mount('https://', HTTPAdapter(max_retries=5))
+        try:
+            req = ses.get(url, headers=headers)
+        except Exception as e:
+            app.logger.error('%s, retry' % e)
+        else:
+            if req.status_code == 200:
+                return True
             else:
-                if req.status_code == 200:
-                    return True
-                else:
-                    app.logger.error('Spotify request failed')
-                    return False
+                app.logger.error('Spotify request failed')
+                return False
+        return False  # After retry 5 times, return false
     else:
         app.logger.error("Spotify token doesn't exist")
         return False
@@ -72,18 +75,20 @@ def checkauth_kkbox():
     if token:
         url = 'https://api.kkbox.com/v1.1/charts'
         headers = {'Authorization': 'Bearer ' + token, 'territory': 'TW'}
-        for i in range(5):  # Retry 5 times if connection error
-            try:
-                req = requests.get(url, headers=headers)
-            except requests.exceptions.ConnectionError:
-                app.logger.error('Connection error, retry %d times' % i)
-                continue
+        ses = requests.Session()
+        ses.mount('http://', HTTPAdapter(max_retries=5))
+        ses.mount('https://', HTTPAdapter(max_retries=5))
+        try:
+            req = ses.get(url, headers=headers)
+        except Exception as e:
+            app.logger.error('%s, retry' % e)
+        else:
+            if req.status_code == 200:
+                return True
             else:
-                if req.status_code == 200:
-                    return True
-                else:
-                    app.logger.error('KKBOX request failed')
-                    return False
+                app.logger.error('KKBOX request failed')
+                return False
+        return False  # After retry 5 times, return false
     else:
         app.logger.error("KKBOX token doesn't exist")
         return False
@@ -114,146 +119,212 @@ def all_tracks_in(playlist_id):
             tracks += tracks_next
         response = {
             'status': 'Success',
-            'msg': "Get all tracks in playlist success",
+            'msg': "Get all tracks in spotify playlist",
             'data': tracks,
         }
         return response
 
 
 def search_trackdata_in_kk(name, artist, album):
-    if checkauth_kkbox():
+    if not checkauth_kkbox():
+        app.logger.error('KKBOX check auth failed')
+        response = {
+            'status': 'Failed',
+            'msg': "KKBOX check auth failed, please login KKBOX.",
+            'data': None,
+        }
+        return response
+    else:
         headers = {
             'Authorization': 'Bearer ' + kkbox_blueprint.session.access_token
         }
-    else:
-        print('Check auth failed')
-        return None
+        ses = requests.Session()
+        ses.mount('http://', HTTPAdapter(max_retries=5))
+        ses.mount('https://', HTTPAdapter(max_retries=5))
 
-    # 0. Prepare variables
-    NAME = name.lower()
-    ABLUM = album.lower()
-    ARTIST = artist.lower()
+    # 0. Prepare variables (case insensitive)
+    SP_NAME = name.lower()
+    SP_ALBUM = album.lower()
+    SP_ARTIST = artist.lower()
 
-    # 1. Search album
+    # 1. Search album_id
+    album_id = ''
     url = 'https://api.kkbox.com/v1.1/search'
-    q = ARTIST + ' ' + ABLUM
+    q = SP_ARTIST + ' ' + SP_ALBUM
     params = {
         'q': q,
         'type': 'album',
         'limit': 1,
     }
     try:
-        req_search = requests.get(url, params=params, headers=headers).json()
+        r = ses.get(url, params=params, headers=headers).json()
     except Exception as e:
-        print('[search_trackdata_in_kk] failed: ' + str(e))
-        return None
+        app.logger.error('%s, retry' % e)
     else:
-        search_rst = req_search.get('albums').get('data')
+        search_rst = r.get('albums').get('data')
         if search_rst:
             album_id = search_rst[0].get('id')
-        else:
-            return None
+    finally:
+        if album_id == '':
+            app.logger.warning(
+                f'({SP_NAME} - {SP_ARTIST} - {SP_ALBUM}) not found (precisely)'
+            )
+            response = {
+                'status': 'Failed',
+                'msg': "Precisely search failed",
+                'data': None,
+            }
+            return response
 
-    # 2. Search track in album
+    # 2. Search track_id in album
+    track_id = ''
     url = 'https://api.kkbox.com/v1.1/albums/' + album_id + '/tracks'
     try:
-        req_album = requests.get(url, headers=headers).json().get('data')
+        r = ses.get(url, headers=headers).json().get('data')
     except Exception as e:
-        print('[search_trackdata_in_kk] failed: ' + str(e))
-        return None
+        app.logger.error('%s, retry' % e)
     else:
-        track_id = ''
-        for track in req_album:
-            search_name = track.get('name').lower()
-            if NAME in search_name or search_name in NAME:
+        for track in r:
+            search_rst = track.get('name').lower()
+            if SP_NAME in search_rst or search_rst in SP_NAME:
                 track_id = track.get('id')
                 break
+    finally:
         if track_id == '':
-            track_id = search_trackdata_in_kk_blurred(NAME, ARTIST, ABLUM)
-            if track_id == '':
-                # print('Nothing found')
-                return None
+            app.logger.warning(
+                f'({SP_NAME} - {SP_ARTIST} - {SP_ALBUM}) not found (precisely)'
+            )
+            response = {
+                'status': 'Failed',
+                'msg': "Precisely search failed",
+                'data': None,
+            }
+            return response
 
     # 3. Get track data by track_id
+    track_data = None
     url = 'https://api.kkbox.com/v1.1/tracks/' + track_id
     try:
-        req_trackdata = requests.get(url, headers=headers).json()
+        r = ses.get(url, headers=headers).json()
     except Exception as e:
-        print('[search_trackdata_in_kk] failed: ' + str(e))
-        return None
+        app.logger.error('%s' % e)
     else:
-        return req_trackdata
+        track_data = r
+        response = {
+            'status': 'Success',
+            'msg': 'Get track data in KKBOX (precisely search)',
+            'data': track_data,
+        }
+        return response
 
 
 def search_trackdata_in_kk_blurred(name, artist, album):
-    if checkauth_kkbox():
+    if not checkauth_kkbox():
+        app.logger.error('KKBOX check auth failed')
+        response = {
+            'status': 'Failed',
+            'msg': "KKBOX check auth failed, please login KKBOX.",
+            'data': None,
+        }
+        return response
+    else:
         headers = {
             'Authorization': 'Bearer ' + kkbox_blueprint.session.access_token
         }
-    else:
-        print('Check auth failed')
-        return ''
+        ses = requests.Session()
+        ses.mount('http://', HTTPAdapter(max_retries=5))
+        ses.mount('https://', HTTPAdapter(max_retries=5))
 
     # 0. Prepare variables
-    NAME = name.split('(')[0].split('-')[0].strip()
-    ARTIST = artist.split('(')[0].split('-')[0].strip()
-    ALBUM = album.split('(')[0].split('-')[0].strip()
-
-    # print('--- Blurred search: ' + NAME + '%%%%' + ARTIST + '%%' + ALBUM)
+    SP_NAME = name.split('(')[0].split('-')[0].strip().lower()
+    SP_ARTIST = artist.split('(')[0].split('-')[0].strip().lower()
+    SP_ALBUM = album.split('(')[0].split('-')[0].strip().lower()
 
     # 1. Search name + artist
-    url = 'https://api.kkbox.com/v1.1/search'
-    q = NAME + ' ' + ARTIST
-    params = {
-        'q': q,
-        'type': 'track',
-        'limit': 50,
-    }
-    try:
-        req_search = requests.get(url, params=params, headers=headers).json()
-    except Exception as e:
-        print('[search_trackdata_in_kk_blurred] failed: ' + str(e))
-        return None
-
-    # 2. Filter result
-    search_rst = req_search.get('tracks').get('data')
     track_id = ''
-    for track in search_rst:
-        search_name = track.get('name').lower()
-        search_album = track.get('album').get('name').lower()
-        search_artist = track.get('album').get('artist').get('name').lower()
-        if NAME in search_name or search_name in NAME:
-            # print('- ' + search_name + '%%%%' + search_artist + '%%' +
-            #       search_album)
-            if ARTIST in search_artist or search_artist in ARTIST or ALBUM in search_album or search_album in ALBUM:
-                return track.get('id')
-
-    # 3. Search name
+    track_data = None
     url = 'https://api.kkbox.com/v1.1/search'
-    q = NAME
+    q = SP_NAME + ' ' + SP_ARTIST
     params = {
         'q': q,
         'type': 'track',
         'limit': 50,
     }
     try:
-        req_search = requests.get(url, params=params, headers=headers).json()
+        r = ses.get(url, params=params, headers=headers).json()
     except Exception as e:
-        print('[search_trackdata_in_kk_blurred] failed: ' + str(e))
-        return None
+        app.logger.error('%s' % e)
+    else:
+        search_rst = r.get('tracks').get('data')
+        for track in search_rst:
+            kk_name = track.get('name').lower()
+            kk_album = track.get('album').get('name').lower()
+            kk_artist = track.get('album').get('artist').get('name').lower()
+            if SP_NAME in kk_name or kk_name in SP_NAME:
+                if SP_ARTIST in kk_artist or kk_artist in SP_ARTIST or SP_ALBUM in kk_album or kk_album in SP_ALBUM:
+                    track_id = track.get('id')
+                    break
+    finally:
+        if track_id != '':
+            url = 'https://api.kkbox.com/v1.1/tracks/' + track_id
+            try:
+                r = ses.get(url, headers=headers).json()
+            except Exception as e:
+                app.logger.error('%s' % e)
+            else:
+                track_data = r
+                response = {
+                    'status': 'Success',
+                    'msg': 'Get track data in KKBOX (blurred)',
+                    'data': track_data,
+                }
+                return response
 
-    # 4. Filter result
-    search_rst = req_search.get('tracks').get('data')
-    for track in search_rst:
-        search_name = track.get('name').lower()
-        search_album = track.get('album').get('name').lower()
-        search_artist = track.get('album').get('artist').get('name').lower()
-        # print('- ' + search_name + '%%%%' + search_artist + '%%' +
-        #   search_album)
-        if ARTIST in search_artist or search_artist in ARTIST:
-            return track.get('id')
-
-    return ''
+    # 2. Search name
+    track_id = ''
+    track_data = None
+    url = 'https://api.kkbox.com/v1.1/search'
+    q = SP_NAME
+    params = {
+        'q': q,
+        'type': 'track',
+        'limit': 50,
+    }
+    try:
+        r = ses.get(url, params=params, headers=headers).json()
+    except Exception as e:
+        app.logger.error('%s' % e)
+    else:
+        search_rst = r.get('tracks').get('data')
+        for track in search_rst:
+            kk_artist = track.get('album').get('artist').get('name').lower()
+            if SP_ARTIST in kk_artist or kk_artist in SP_ARTIST:
+                track_id = track.get('id')
+                break
+    finally:
+        if track_id != '':
+            url = 'https://api.kkbox.com/v1.1/tracks/' + track_id
+            try:
+                r = ses.get(url, headers=headers).json()
+            except Exception as e:
+                app.logger.error('%s' % e)
+            else:
+                track_data = r
+                response = {
+                    'status': 'Success',
+                    'msg': 'Get track data in KKBOX (blurred)',
+                    'data': track_data,
+                }
+                return response
+        else:
+            app.logger.warning(
+                f'({SP_NAME} - {SP_ARTIST} - {SP_ALBUM}) not found (blurred)')
+            response = {
+                'status': 'Failed',
+                'msg': "Blurred search failed",
+                'data': None,
+            }
+            return response
 
 
 def get_trackdata_in_kk(track_id):
@@ -526,19 +597,36 @@ def search_all_tracks_in_sp():
     return jsonify(response=response)
 
 
-@app.route('/search/trackdata_in_kkbox', methods=['POST'])
-def search_trackdata_in_kkbox():
-    sp_data = request.json['data']
+@app.route('/search/kbl_attribute', methods=['POST'])
+def search_kbl_attribute():
+    sp_data = request.json['sp_data']
     track_name = sp_data['track']['name']
     track_album = sp_data['track']['album']['name']
     track_artist = sp_data['track']['artists'][0]['name']
-    kk_data = search_trackdata_in_kk(track_name, track_artist, track_album)
-    if kk_data:
-        track_data = {'status': 'success', 'data': kk_data}
-        return jsonify(track_data=track_data)
-    else:
-        track_data = {'status': 'failed', 'data': sp_data}
-        return jsonify(track_data=track_data)
+    # 1. Search trackdata in kkbox
+    resp = search_trackdata_in_kk(track_name, track_artist, track_album)
+    if resp['status'] == 'Failed' and resp['msg'] == "Precisely search failed":
+        resp = search_trackdata_in_kk_blurred(track_name, track_artist,
+                                              track_album)
+    if resp['status'] == 'Failed':
+        response = {
+            'status': 'Failed',
+            'msg': resp['msg'],
+            'data': {
+                'track_data': sp_data,
+                'kbl_attribute': None,
+            },
+        }
+        return jsonify(response=response)
+    kk_data = resp['data']
+    print(kk_data)
+    return jsonify(a=None)
+    # if kk_data:
+    #     track_data = {'status': 'success', 'data': kk_data}
+    #     return jsonify(track_data=track_data)
+    # else:
+    #     track_data = {'status': 'failed', 'data': sp_data}
+    #     return jsonify(track_data=track_data)
 
 
 @app.route('/upload_kbl', methods=['POST'])
