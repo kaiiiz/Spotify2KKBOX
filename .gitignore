@@ -1,6 +1,3 @@
 Pipfile*
 __pycache__/
 .vscode/
-config.py
-log/
-kbl/
