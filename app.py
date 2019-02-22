@@ -346,48 +346,60 @@ def get_trackdata_in_kk(track_id):
 
 
 def get_kbl_pathname(song_name_url):
+    ses = requests.Session()
+    ses.mount('http://', HTTPAdapter(max_retries=5))
+    ses.mount('https://', HTTPAdapter(max_retries=5))
     try:
-        r = requests.get(song_name_url)
+        r = ses.get(song_name_url)
     except Exception as e:
-        print('[get_kbl_pathname] failed: ' + str(e))
-        return None
-    soup = bs4.BeautifulSoup(r.text, features="html5lib")
-    song_pathname = soup.find("meta", property="al:ios:url")
-    if (song_pathname):
-        id_len = len(song_pathname["content"])
-        return song_pathname["content"][18:id_len]
+        app.logger.error('%s' % e)
     else:
-        return None
+        soup = bs4.BeautifulSoup(r.text, features="html5lib")
+        song_pathname = soup.find("meta", property="al:ios:url")
+        if song_pathname:
+            id_len = len(song_pathname["content"])
+            return song_pathname["content"][18:id_len]
+        else:
+            return None
+    return None
 
 
 def get_kbl_artistid(song_artist_url):
+    ses = requests.Session()
+    ses.mount('http://', HTTPAdapter(max_retries=5))
+    ses.mount('https://', HTTPAdapter(max_retries=5))
     try:
         r = requests.get(song_artist_url)
     except Exception as e:
-        print('[get_kbl_artistid] failed: ' + str(e))
-        return None
-    soup = bs4.BeautifulSoup(r.text, features="html5lib")
-    song_pathname = soup.find("meta", property="al:ios:url")
-    if (song_pathname):
-        id_len = len(song_pathname["content"])
-        return song_pathname["content"][15:id_len]
+        app.logger.error('%s' % e)
     else:
-        return None
+        soup = bs4.BeautifulSoup(r.text, features="html5lib")
+        song_artist_id = soup.find("meta", property="al:ios:url")
+        if song_artist_id:
+            id_len = len(song_artist_id["content"])
+            return song_artist_id["content"][15:id_len]
+        else:
+            return None
+    return None
 
 
 def get_kbl_albumid(song_album_url):
+    ses = requests.Session()
+    ses.mount('http://', HTTPAdapter(max_retries=5))
+    ses.mount('https://', HTTPAdapter(max_retries=5))
     try:
         r = requests.get(song_album_url)
     except Exception as e:
-        print('[get_kbl_albumid] failed: ' + str(e))
-        return None
-    soup = bs4.BeautifulSoup(r.text, features="html5lib")
-    song_pathname = soup.find("meta", property="al:ios:url")
-    if (song_pathname):
-        id_len = len(song_pathname["content"])
-        return song_pathname["content"][14:id_len]
+        app.logger.error('%s' % e)
     else:
-        return None
+        soup = bs4.BeautifulSoup(r.text, features="html5lib")
+        song_album_id = soup.find("meta", property="al:ios:url")
+        if song_album_id:
+            id_len = len(song_album_id["content"])
+            return song_album_id["content"][14:id_len]
+        else:
+            return None
+    return None
 
 
 def get_kbl_template(playlistcnt, songcnt):
@@ -558,10 +570,6 @@ def convert_crawler_search_id():
     kbl_data['song_song_idx'] = track_data['track_number']
     if not (kbl_data['song_pathname'] and kbl_data['song_artist_id']
             and kbl_data['song_album_id']):
-        # print('song_pathname', kbl_data['song_pathname'], name_url)
-        # print('song_artist_id', kbl_data['song_artist_id'], artist_url)
-        # print('song_album_id', kbl_data['song_album_id'], album_url)
-        # print(track_data['album'])
         kbl = {'status': 'failed', 'track_data': track_data}
         return jsonify(kbl=kbl)
     else:
@@ -613,19 +621,43 @@ def search_kbl_attribute():
             'msg': resp['msg'],
             'data': {
                 'track_data': sp_data,
-                'kbl_attribute': None,
+                'kbl_attr': None,
             },
         }
         return jsonify(response=response)
     kk_data = resp['data']
-    print(kk_data)
-    return jsonify(a=None)
-    # if kk_data:
-    #     track_data = {'status': 'success', 'data': kk_data}
-    #     return jsonify(track_data=track_data)
-    # else:
-    #     track_data = {'status': 'failed', 'data': sp_data}
-    #     return jsonify(track_data=track_data)
+    # 2. Search kbl attribute
+    name_url = kk_data['url']
+    artist_url = kk_data['album']['artist']['url']
+    album_url = kk_data['album']['url']
+    kbl_attr = {}
+    kbl_attr['song_pathname'] = get_kbl_pathname(name_url)
+    kbl_attr['song_artist_id'] = get_kbl_artistid(artist_url)
+    kbl_attr['song_album_id'] = get_kbl_albumid(album_url)
+    kbl_attr['song_song_idx'] = kk_data['track_number']
+    if not (kbl_attr['song_pathname'] and kbl_attr['song_artist_id']
+            and kbl_attr['song_album_id']):
+        app.logger.warning(
+            f'({sp_name} - {sp_artist} - {sp_album}) not found (kbl attr)')
+        response = {
+            'status': 'Failed',
+            'msg': "kbl attribute doesn't exist",
+            'data': {
+                'track_data': sp_data,
+                'kbl_attr': None,
+            },
+        }
+        return jsonify(response=response)
+    else:
+        response = {
+            'status': 'Success',
+            'msg': "search kbl attribute",
+            'data': {
+                'track_data': kk_data,
+                'kbl_attr': kbl_attr,
+            },
+        }
+        return jsonify(response=response)
 
 
 @app.route('/upload_kbl', methods=['POST'])

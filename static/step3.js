@@ -84,24 +84,36 @@ function search_in_kkbox(sp_playlist, playlist_cnt) {
             cache: false,
             processData: false,
             success: function (data) {
-                var track_data = data.track_data.data
-                var status = data.track_data.status
-                if (status == 'success') {
+                var status = data.response.status
+                var msg = data.response.msg
+                var track_data = data.response.data.track_data
+                var kbl_attr = data.response.data.kbl_attr
+                console.log(status, msg, track_data, kbl_attr)
+                if (status == 'Success') {
+                    var success_log = ''
                     var track_name = track_data['name']
                     var track_album = track_data['album']['name']
                     var track_artist = track_data['album']['artist']['name']
-                    var track_id = track_data['id']
-                    var success_log = '<div>'
-                    success_log += "<input type='checkbox' name='" + track_name + "' value='" + track_id + "'checked>"
+                    var song_pathname = kbl_attr['song_pathname']
+                    var song_artist_id = kbl_attr['song_artist_id']
+                    var song_album_id = kbl_attr['song_album_id']
+                    var song_song_idx = kbl_attr['song_song_idx']
+                    success_log += `<div>`
+                    success_log += `<input type='checkbox'`
+                    success_log += `data-song_album_id=${song_album_id} `
+                    success_log += `data-song_artist_id='${song_artist_id}' `
+                    success_log += `data-song_pathname='${song_pathname}' `
+                    success_log += `data-song_song_idx='${song_song_idx}' checked>`
                     success_log += track_name + ' - ' + track_artist + ' - ' + track_album
                     success_log += '</div>'
                     $('#search_success_' + playlist_cnt).append(success_log)
                 }
-                else if (status == 'failed') {
-                    track_name = track_data['track']['name']
-                    track_album = track_data['track']['album']['name']
-                    track_artist = track_data['track']['artists'][0]['name']
-                    $('#search_failed_' + playlist_cnt).append('<li>' + track_name + ' - ' + track_artist + ' - ' + track_album + '</li>')
+                else {
+                    var track_name = track_data['track']['name']
+                    var track_album = track_data['track']['album']['name']
+                    var track_artist = track_data['track']['artists'][0]['name']
+                    failed_log = `<li>${track_name} - ${track_artist} - ${track_album}</li>`
+                    $('#search_failed_' + playlist_cnt).append(failed_log)
                 }
             },
         });
