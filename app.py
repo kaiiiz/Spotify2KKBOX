@@ -600,14 +600,13 @@ def search_all_tracks_in_sp():
 @app.route('/search/kbl_attribute', methods=['POST'])
 def search_kbl_attribute():
     sp_data = request.json['sp_data']
-    track_name = sp_data['track']['name']
-    track_album = sp_data['track']['album']['name']
-    track_artist = sp_data['track']['artists'][0]['name']
+    sp_name = sp_data['track']['name']
+    sp_album = sp_data['track']['album']['name']
+    sp_artist = sp_data['track']['artists'][0]['name']
     # 1. Search trackdata in kkbox
-    resp = search_trackdata_in_kk(track_name, track_artist, track_album)
+    resp = search_trackdata_in_kk(sp_name, sp_artist, sp_album)
     if resp['status'] == 'Failed' and resp['msg'] == "Precisely search failed":
-        resp = search_trackdata_in_kk_blurred(track_name, track_artist,
-                                              track_album)
+        resp = search_trackdata_in_kk_blurred(sp_name, sp_artist, sp_album)
     if resp['status'] == 'Failed':
         response = {
             'status': 'Failed',
