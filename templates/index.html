@@ -8,18 +8,21 @@
     </head>
 
     <body>
-        <div class="container">
-            <h1 class="text-center">Spotify2KKBOX</h1>
-            <hr>
-            <h3 class="text-center">1. OAuth</h3>
-            <form class="text-center" action="{{ url_for('login') }}" method="POST">
-                <button class="btn btn-outline-secondary" name="platform" value="spotify">Spotify</button>
-                <button class="btn btn-outline-secondary" name="platform" value="kkbox">KKBOX</button>
+        <div class="uk-container uk-container-xsmall">
+            <h1 class="uk-text-center">Spotify2KKBOX</h1>
+            <h3 class="uk-heading-line uk-text-center"><span>1. OAuth</span></h3>
+            <form class="uk-text-center" action="{{ url_for('login') }}" method="POST">
+                {% if spotify_outh_status %}
+                    <button class="uk-button uk-button-default uk-width-1-4 button-success" name="platform" value="spotify">Spotify</button>
+                {% else %}
+                    <button class="uk-button uk-button-default uk-width-1-4 uk-button-danger" name="platform" value="spotify">Spotify</button>
+                {% endif %}
+                {% if kkbox_outh_status %}
+                    <button class="uk-button uk-button-default uk-width-1-4 button-success" name="platform" value="kkbox">KKBOX</button>
+                {% else %}
+                    <button class="uk-button uk-button-default uk-width-1-4 uk-button-danger" name="platform" value="kkbox">KKBOX</button>
+                {% endif %}
             </form>
-            <div class="text-center">
-                <p>Spotify: {{ spotify_outh_status }}</p>
-                <p>KKBOX: {{ kkbox_outh_status }}</p>
-            </div>
             <hr>
             <h3>2. Upload kbl file</h3>
             <form id="upload_kbl" enctype="multipart/form-data" method="POST">
@@ -46,10 +49,11 @@
 
 </html>
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.3/css/uikit.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.3/js/uikit.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.3/js/uikit-icons.min.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/spotify2kkbox.css') }}">
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"></script>
 <script type=text/javascript>
     $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>

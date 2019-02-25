@@ -1,0 +1,13 @@
+.button-success {
+    background-color: #32d296;
+    color: #fff;
+    border: 1px solid transparent;
+}
+.button-success.uk-active, .button-success:active {
+    background-color: #32d296;
+    color: #fff;
+}
+.button-success:focus, .button-success:hover {
+    background-color: #30c790;
+    color: #fff;
+}
