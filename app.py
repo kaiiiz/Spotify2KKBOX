@@ -101,7 +101,7 @@ def all_tracks_in(playlist_id):
     if not checkauth_spotify():
         app.logger.error('Spotify check auth failed')
         response = {
-            'status': 'Failed',
+            'status': 'failed',
             'msg': "Spotify check auth failed, please login spotify.",
             'data': None,
         }
@@ -121,7 +121,7 @@ def all_tracks_in(playlist_id):
             tracks_next = tracks_raw.get('items')
             tracks += tracks_next
         response = {
-            'status': 'Success',
+            'status': 'success',
             'msg': "Get all tracks in spotify playlist",
             'data': tracks,
         }
@@ -132,7 +132,7 @@ def search_trackdata_in_kk(name, artist, album):
     if not checkauth_kkbox():
         app.logger.error('KKBOX check auth failed')
         response = {
-            'status': 'Failed',
+            'status': 'failed',
             'msg': "KKBOX check auth failed, please login KKBOX.",
             'data': None,
         }
@@ -173,7 +173,7 @@ def search_trackdata_in_kk(name, artist, album):
                 f'({SP_NAME} - {SP_ARTIST} - {SP_ALBUM}) not found (precisely)'
             )
             response = {
-                'status': 'Failed',
+                'status': 'failed',
                 'msg': "Precisely search failed",
                 'data': None,
             }
@@ -198,7 +198,7 @@ def search_trackdata_in_kk(name, artist, album):
                 f'({SP_NAME} - {SP_ARTIST} - {SP_ALBUM}) not found (precisely)'
             )
             response = {
-                'status': 'Failed',
+                'status': 'failed',
                 'msg': "Precisely search failed",
                 'data': None,
             }
@@ -214,7 +214,7 @@ def search_trackdata_in_kk(name, artist, album):
     else:
         track_data = r
         response = {
-            'status': 'Success',
+            'status': 'success',
             'msg': 'Get track data in KKBOX (precisely search)',
             'data': track_data,
         }
@@ -225,7 +225,7 @@ def search_trackdata_in_kk_blurred(name, artist, album):
     if not checkauth_kkbox():
         app.logger.error('KKBOX check auth failed')
         response = {
-            'status': 'Failed',
+            'status': 'failed',
             'msg': "KKBOX check auth failed, please login KKBOX.",
             'data': None,
         }
@@ -277,7 +277,7 @@ def search_trackdata_in_kk_blurred(name, artist, album):
             else:
                 track_data = r
                 response = {
-                    'status': 'Success',
+                    'status': 'success',
                     'msg': 'Get track data in KKBOX (blurred)',
                     'data': track_data,
                 }
@@ -314,7 +314,7 @@ def search_trackdata_in_kk_blurred(name, artist, album):
             else:
                 track_data = r
                 response = {
-                    'status': 'Success',
+                    'status': 'success',
                     'msg': 'Get track data in KKBOX (blurred)',
                     'data': track_data,
                 }
@@ -323,7 +323,7 @@ def search_trackdata_in_kk_blurred(name, artist, album):
             app.logger.warning(
                 f'({SP_NAME} - {SP_ARTIST} - {SP_ALBUM}) not found (blurred)')
             response = {
-                'status': 'Failed',
+                'status': 'failed',
                 'msg': "Blurred search failed",
                 'data': None,
             }
@@ -456,7 +456,7 @@ def index():
         'kbl_package_descr'] if 'kbl_package_descr' in session else 'Unknown'
     kbl_package_packdate = session[
         'kbl_package_packdate'] if 'kbl_package_packdate' in session else 'Unknown'
-    kbl_status = 'Success' if 'kbl_status' in session else 'Unknown'
+    kbl_status = 'success' if 'kbl_status' in session else 'Unknown'
     return render_template(
         'index.html',
         spotify_outh_status=spotify_outh_status,
@@ -485,7 +485,7 @@ def download_generate_kbl():
     if not kbl_template:  # generate failed
         app.logger.error('generate failed, need kbl attributes')
         response = {
-            'status': 'Failed',
+            'status': 'failed',
             'msg': 'generate failed, need kbl attributes',
             'filename': None,
         }
@@ -525,7 +525,7 @@ def download_generate_kbl():
 
     # 5. return filename
     response = {
-        'status': 'Success',
+        'status': 'success',
         'msg': 'generate success',
         'filename': filename,
     }
@@ -559,10 +559,10 @@ def search_all_tracks_in_sp():
     sp_playlists = []
     for p_name, p_id in playlists.items():
         playlist = all_tracks_in(p_id)
-        if playlist['status'] == 'Failed':
+        if playlist['status'] == 'failed':
             app.logger.error('Get all tracks failed - %s' % playlist['msg'])
             response = {
-                'status': 'Failed',
+                'status': 'failed',
                 'msg': playlist['msg'],
                 'data': None,
             }
@@ -570,7 +570,7 @@ def search_all_tracks_in_sp():
         else:
             sp_playlists.append([p_name, playlist['data']])
     response = {
-        'status': 'Success',
+        'status': 'success',
         'msg': 'Search all tracks in spotify success',
         'data': sp_playlists,
     }
@@ -585,11 +585,11 @@ def search_kbl_attribute():
     sp_artist = sp_data['track']['artists'][0]['name']
     # 1. Search trackdata in kkbox
     resp = search_trackdata_in_kk(sp_name, sp_artist, sp_album)
-    if resp['status'] == 'Failed' and resp['msg'] == "Precisely search failed":
+    if resp['status'] == 'failed' and resp['msg'] == "Precisely search failed":
         resp = search_trackdata_in_kk_blurred(sp_name, sp_artist, sp_album)
-    if resp['status'] == 'Failed':
+    if resp['status'] == 'failed':
         response = {
-            'status': 'Failed',
+            'status': 'failed',
             'msg': resp['msg'],
             'data': {
                 'track_data': sp_data,
@@ -612,7 +612,7 @@ def search_kbl_attribute():
         app.logger.warning(
             f'({sp_name} - {sp_artist} - {sp_album}) not found (kbl attr)')
         response = {
-            'status': 'Failed',
+            'status': 'failed',
             'msg': "kbl attribute doesn't exist",
             'data': {
                 'track_data': sp_data,
@@ -622,7 +622,7 @@ def search_kbl_attribute():
         return jsonify(response=response)
     else:
         response = {
-            'status': 'Success',
+            'status': 'success',
             'msg': "search kbl attribute",
             'data': {
                 'track_data': kk_data,
@@ -644,14 +644,14 @@ def upload_kbl():
             'package_packdate': None,
         }
     }
-    file = request.files.get('file')
+    file = request.files.get('files[]')
     if not file:
         app.logger.error("Upload failed! File doesn't exist")
-        response['status'] = "Failed"
+        response['status'] = "failed"
         response['msg'] = "File doesn't exist"
     elif not allowed_file(file.filename):
         app.logger.error("Upload failed! Unsupport file format")
-        response['status'] = "Failed"
+        response['status'] = "failed"
         response['msg'] = "Unsupport file format"
     else:
         xml = file.read().decode('utf-8')
@@ -660,7 +660,7 @@ def upload_kbl():
             content = content.get('utf-8_data').get('kkbox_package')
         except xmltodict.expat.ExpatError:
             app.logger.error("Upload failed! kbl file parse failed!")
-            response['status'] = "Failed"
+            response['status'] = "failed"
             response['msg'] = "kbl file parse failed!"
         else:
             kkbox_ver = content.get('kkbox_ver') or ''
@@ -668,7 +668,7 @@ def upload_kbl():
             package_descr = content.get('package').get('descr') or ''
             package_packdate = content.get('package').get('packdate') or ''
             update_ses = {
-                'kbl_status': 'Success',
+                'kbl_status': 'success',
                 'kbl_kkbox_ver': kkbox_ver,
                 'kbl_package_ver': package_ver,
                 'kbl_package_descr': package_descr,
@@ -676,7 +676,7 @@ def upload_kbl():
             }
             session.update(update_ses)
             update_resp = {
-                'status': "Success",
+                'status': "success",
                 'msg': "Upload success!",
                 'data': {
                     'kkbox_ver': kkbox_ver,
@@ -705,7 +705,7 @@ def get_spotify_playlists():
     if not checkauth_spotify():
         app.logger.error('Spotify check auth failed')
         response = {
-            'status': 'Failed',
+            'status': 'failed',
             'msg': "Spotify check auth failed, please login spotify.",
             'data': None,
         }
@@ -714,7 +714,7 @@ def get_spotify_playlists():
         url = 'https://api.spotify.com/v1/me/playlists'
         headers = {'Authorization': 'Bearer ' + spotify.access_token}
         response = {
-            'status': 'Success',
+            'status': 'success',
             'msg': "Get playlists success",
             'data': {
                 'playlists': requests.get(url, headers=headers).json()

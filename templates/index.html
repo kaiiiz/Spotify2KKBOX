@@ -1,4 +1,17 @@
 <!DOCTYPE html>
+<meta>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.3/css/uikit.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.3/js/uikit.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.3/js/uikit-icons.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/spotify2kkbox.css') }}">
+    <script type=text/javascript>
+        $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+    </script>
+    <script src="{{url_for('static', filename='js/step2.js')}}"></script>
+    <script src="{{url_for('static', filename='js/step3.js')}}"></script>
+    <script src="{{url_for('static', filename='js/step4.js')}}"></script>
+</meta>
 <html>
 
     <head>
@@ -8,32 +21,75 @@
     </head>
 
     <body>
-        <div class="uk-container uk-container-xsmall">
+        <div id="step1" class="uk-container uk-container-xsmall">
             <h1 class="uk-text-center">Spotify2KKBOX</h1>
-            <h3 class="uk-heading-line uk-text-center"><span>1. OAuth</span></h3>
-            <form class="uk-text-center" action="{{ url_for('login') }}" method="POST">
-                {% if spotify_outh_status %}
-                    <button class="uk-button uk-button-default uk-width-1-4 button-success" name="platform" value="spotify">Spotify</button>
-                {% else %}
-                    <button class="uk-button uk-button-default uk-width-1-4 uk-button-danger" name="platform" value="spotify">Spotify</button>
-                {% endif %}
-                {% if kkbox_outh_status %}
-                    <button class="uk-button uk-button-default uk-width-1-4 button-success" name="platform" value="kkbox">KKBOX</button>
-                {% else %}
-                    <button class="uk-button uk-button-default uk-width-1-4 uk-button-danger" name="platform" value="kkbox">KKBOX</button>
-                {% endif %}
-            </form>
             <hr>
-            <h3>2. Upload kbl file</h3>
-            <form id="upload_kbl" enctype="multipart/form-data" method="POST">
-                <input name="file" type="file">
-            </form>
-            <button id="upload_kbl_btn" type="button">Upload</button>
-            <p>status: <span id="kbl_status">{{ kbl_status }}</span></p>
-            <p>kkbox_ver: <span id="kbl_kkbox_ver">{{ kbl_kkbox_ver }}</span></p>
-            <p>package_ver: <span id="kbl_package_ver">{{ kbl_package_ver }}</span></p>
-            <p>package_descr: <span id="kbl_package_descr">{{ kbl_package_descr }}</span></p>
-            <p>package_packdate: <span id="kbl_package_packdate">{{ kbl_package_packdate }}</span></p>
+            <!-- step1 -->
+            <div class="uk-card uk-card-default uk-margin-bottom">
+                <!-- status -->
+                {% if spotify_outh_status and kkbox_outh_status %}
+                    <div id="step1_status" class="uk-card-badge uk-label label-success">STEP1</div>
+                {% else %}
+                    <div id="step1_status" class="uk-card-badge uk-label label-failed">STEP1</div>
+                {% endif %}
+                <!-- header -->
+                <div class="uk-card-header">
+                    <h3 class="uk-text-center uk-card-title">OAuth</h3>
+                </div>
+                <!-- body -->
+                <div class="uk-card-body uk-text-center">
+                    <p>Description</p>
+                </div>
+                <!-- footer -->
+                <div class="uk-card-footer">
+                    <form class="uk-text-center" action="{{ url_for('login') }}" method="POST">
+                        {% if spotify_outh_status %}
+                            <button class="uk-button uk-button-default uk-width-1-4 button-success" name="platform" value="spotify">Spotify</button>
+                        {% else %}
+                            <button class="uk-button uk-button-default uk-width-1-4 uk-button-danger" name="platform" value="spotify">Spotify</button>
+                        {% endif %}
+                        {% if kkbox_outh_status %}
+                            <button class="uk-button uk-button-default uk-width-1-4 button-success" name="platform" value="kkbox">KKBOX</button>
+                        {% else %}
+                            <button class="uk-button uk-button-default uk-width-1-4 uk-button-danger" name="platform" value="kkbox">KKBOX</button>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+            <!-- step2 -->
+            <div class="uk-card uk-card-default uk-margin-bottom">
+                <!-- status -->
+                {% if kbl_status == "success" %}
+                    <div id="step2_status" class="uk-card-badge uk-label label-success">STEP2</div>
+                {% else %}
+                    <div id="step2_status" class="uk-card-badge uk-label label-failed">STEP2</div>
+                {% endif %}
+                <!-- header -->
+                <div class="uk-card-header">
+                    <h3 class="uk-text-center uk-card-title">Upload kbl file</h3>
+                </div>
+                <!-- body -->
+                <div class="uk-card-body uk-text-center">
+                    <p>upload status: <span id="kbl_status">{{ kbl_status }}</span></p>
+                    <p>kkbox_ver: <span id="kbl_kkbox_ver">{{ kbl_kkbox_ver }}</span></p>
+                    <p>package_ver: <span id="kbl_package_ver">{{ kbl_package_ver }}</span></p>
+                    <p>package_descr: <span id="kbl_package_descr">{{ kbl_package_descr }}</span></p>
+                    <p>package_packdate: <span id="kbl_package_packdate">{{ kbl_package_packdate }}</span></p>
+                </div>
+                <!-- footer -->
+                <div class="uk-card-footer uk-padding-remove">
+                    <div class="js-upload uk-placeholder uk-text-center">
+                        <span uk-icon="icon: cloud-upload"></span>
+                        <span class="uk-text-middle">Attach .kbl by dropping them here or</span>
+                        <div id="upload_kbl" enctype="multipart/form-data" method="POST" uk-form-custom>
+                            <input type="file" multiple>
+                            <span class="uk-link">selecting one</span>
+                        </div>
+                        <progress id="js-progressbar" class="uk-progress" value="0" max="100" hidden></progress>
+                    </div>
+                </div>
+            </div>
+
             <hr>
             <h3>3. Spotify playlist</h3>
             <button id='get_sp_playlist'>Get playlist</button>
@@ -48,15 +104,3 @@
     </body>
 
 </html>
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.3/css/uikit.min.css" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.3/js/uikit.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.3/js/uikit-icons.min.js"></script>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/spotify2kkbox.css') }}">
-<script type=text/javascript>
-    $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
-</script>
-<script src="{{url_for('static', filename='js/step2.js')}}"></script>
-<script src="{{url_for('static', filename='js/step3.js')}}"></script>
-<script src="{{url_for('static', filename='js/step4.js')}}"></script>

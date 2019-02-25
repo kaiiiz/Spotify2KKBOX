@@ -13,7 +13,7 @@ $(function () {
                 status = data.response.status
                 msg = data.response.msg
                 filename = data.response.filename
-                if (status == 'Success') {
+                if (status == 'success') {
                     window.location.replace('download/' + filename)
                 }
             },

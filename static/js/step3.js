@@ -7,7 +7,7 @@ $(function () {
                 var status = data.response.status
                 var msg = data.response.msg
                 var data = data.response.data
-                if (status == 'Failed') {
+                if (status == 'failed') {
                     $("#spotify_playlists").html('<p>Failed - ' + msg + '</p>')
                     return
                 }
@@ -64,7 +64,7 @@ $(function () {
                 var status = data.response.status
                 var msg = data.response.msg
                 var sp_playlists = data.response.data
-                if (status == "Failed") {
+                if (status == "failed") {
                     $("#search_detail").html('<p>Failed - ' + msg + '</p>')
                     return
                 }
@@ -96,7 +96,7 @@ function search_in_kkbox(sp_playlist, playlist_cnt) {
                 var msg = data.response.msg
                 var track_data = data.response.data.track_data
                 var kbl_attr = data.response.data.kbl_attr
-                if (status == 'Success') {
+                if (status == 'success') {
                     var success_log = ''
                     var track_name = track_data['name']
                     var track_album = track_data['album']['name']
