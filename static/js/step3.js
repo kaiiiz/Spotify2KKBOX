@@ -40,6 +40,11 @@ $(function () {
             playlist_name = pair[0]
             html += `<div id="search_log_${playlist_cnt}">`
             html += `<h4>${playlist_name}</h4>`
+            html += `<div>`
+            html += `<span id="search_progress_${playlist_cnt}">0</span>`
+            html += `<span>/</span>`
+            html += `<span id="search_songnum_${playlist_cnt}">0</span>`
+            html += `</div>`
             html += `<h5>Success</h5>`
             html += `<form id="search_success_${playlist_cnt}" name="${playlist_name}"></form>`
             html += `<h5>Failed</h5>`
@@ -63,17 +68,21 @@ $(function () {
                     $("#search_detail").html('<p>Failed - ' + msg + '</p>')
                     return
                 }
-                var playlist_cnt = 0
-                sp_playlists.forEach(sp_playlist => {
-                    var done = search_in_kkbox(sp_playlist, playlist_cnt)
-                    if (done) playlist_cnt++
-                });
+                else {
+                    var playlist_cnt = 0
+                    sp_playlists.forEach(sp_playlist => {
+                        var track_num = sp_playlist[1].length
+                        $('#search_songnum_' + playlist_cnt).html(track_num)
+                        var done = search_in_kkbox(sp_playlist, playlist_cnt)
+                        if (done) playlist_cnt++
+                    });
+                }
             },
         });
     });
 });
 function search_in_kkbox(sp_playlist, playlist_cnt) {
-    playlist_name = sp_playlist[0]
+    var search_progress = 0
     sp_playlist[1].forEach(track => {
         $.ajax({
             type: 'POST',
@@ -113,6 +122,8 @@ function search_in_kkbox(sp_playlist, playlist_cnt) {
                     failed_log = `<li>${track_name} - ${track_artist} - ${track_album}</li>`
                     $('#search_failed_' + playlist_cnt).append(failed_log)
                 }
+                search_progress++
+                $('#search_progress_' + playlist_cnt).html(search_progress)
             },
         });
     });
