@@ -24,6 +24,7 @@
         <div class="uk-container uk-container-xsmall">
             <h1 class="uk-text-center">Spotify2KKBOX</h1>
             <hr>
+
             <!-- step1 -->
             <div class="uk-card uk-card-default uk-margin-bottom">
                 <!-- status -->
@@ -56,6 +57,7 @@
                     </form>
                 </div>
             </div>
+
             <!-- step2 -->
             <div class="uk-card uk-card-default uk-margin-bottom">
                 <!-- status -->
@@ -88,6 +90,7 @@
                     </div>
                 </div>
             </div>
+
             <!-- step3 -->
             <div class="uk-card uk-card-default uk-margin-bottom">
                 <!-- status -->
@@ -122,11 +125,34 @@
                 </div>
             </div>
 
-            <!-- <form id="spotify_playlists" method="POST"></form> -->
-            <hr>
-            <h3>4. Select tracks</h3>
-            <div id="search_detail" method="POST"></div>
-            <button id="download_btn" type="button">Download kbl</button>
+            <!-- step4 -->
+            <div class="uk-card uk-card-default uk-margin-bottom">
+                <!-- status -->
+                {% if kbl_status == "success" %}
+                    <div id="step4_status" class="uk-card-badge uk-label uk-label-success" uk-tooltip="success">STEP4</div>
+                {% else %}
+                    <div id="step4_status" class="uk-card-badge uk-label uk-label-danger" uk-tooltip="failed">STEP4</div>
+                {% endif %}
+                <!-- header -->
+                <div class="uk-card-header">
+                    <h3 class="uk-text-center uk-card-title">Select tracks</h3>
+                </div>
+                <!-- body -->
+                <div class="uk-card-body">
+                    <div id="search_detail" method="POST">
+                        <div class="uk-text-center">Nothing here :(</div>
+
+                    </div>
+                </div>
+                <!-- footer -->
+                <div class="uk-card-footer uk-text-center">
+                    {% if kbl_status == "success" %}
+                        <button id="download_btn" class="uk-button uk-button-default uk-width-1-2 uk-button-primary">Download kbl</button>
+                    {% else %}
+                        <button id="download_btn" class="uk-button uk-button-default uk-width-1-2 uk-button-danger">Download kbl</button>
+                    {% endif %}
+                </div>
+            </div>
             <p id="download_detail"></p>
         </div>
     </body>

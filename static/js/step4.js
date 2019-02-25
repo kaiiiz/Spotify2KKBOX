@@ -15,6 +15,16 @@ $(function () {
                 filename = data.response.filename
                 if (status == 'success') {
                     window.location.replace('download/' + filename)
+                    $('#step4_status').removeClass('uk-label-danger')
+                    $('#step4_status').addClass('uk-label-success')
+                    $('#step4_status').attr('uk-tooltip', msg)
+                    $('#step4_status').html('SUCCESS')
+                }
+                else {
+                    $('#step4_status').removeClass('uk-label-success')
+                    $('#step4_status').addClass('uk-label-danger')
+                    $('#step4_status').attr('uk-tooltip', msg)
+                    $('#step4_status').html('FAILED')
                 }
             },
         })
@@ -25,7 +35,7 @@ function get_all_playlists() {
     playlists_num = $('#search_detail').children().length
     for (let i = 0; i < playlists_num; i++) {
         playlist = []
-        playlist_name = $('#search_success_' + i).prop("name")
+        playlist_name = $(`#search_log_${i} h3 .uk-text-left span`).text()
         playlist_checked = $('#search_success_' + i).find('input:checked')
         $.each(playlist_checked, function (i, track) {
             var track_data = {
