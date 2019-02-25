@@ -11,9 +11,6 @@
     background-color: #30c790;
     color: #fff;
 }
-.label-failed {
-    background:#f0506e;
-}
-.label-success {
-    background:#30c790;
+.no-border {
+    border: 0px !important;
 }

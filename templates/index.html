@@ -21,16 +21,16 @@
     </head>
 
     <body>
-        <div id="step1" class="uk-container uk-container-xsmall">
+        <div class="uk-container uk-container-xsmall">
             <h1 class="uk-text-center">Spotify2KKBOX</h1>
             <hr>
             <!-- step1 -->
             <div class="uk-card uk-card-default uk-margin-bottom">
                 <!-- status -->
                 {% if spotify_outh_status and kkbox_outh_status %}
-                    <div id="step1_status" class="uk-card-badge uk-label label-success">STEP1</div>
+                    <div id="step1_status" class="uk-card-badge uk-label uk-label-success" uk-tooltip="success">STEP1</div>
                 {% else %}
-                    <div id="step1_status" class="uk-card-badge uk-label label-failed">STEP1</div>
+                    <div id="step1_status" class="uk-card-badge uk-label uk-label-danger" uk-tooltip="failed">STEP1</div>
                 {% endif %}
                 <!-- header -->
                 <div class="uk-card-header">
@@ -60,9 +60,9 @@
             <div class="uk-card uk-card-default uk-margin-bottom">
                 <!-- status -->
                 {% if kbl_status == "success" %}
-                    <div id="step2_status" class="uk-card-badge uk-label label-success">STEP2</div>
+                    <div id="step2_status" class="uk-card-badge uk-label uk-label-success" uk-tooltip="success">STEP2</div>
                 {% else %}
-                    <div id="step2_status" class="uk-card-badge uk-label label-failed">STEP2</div>
+                    <div id="step2_status" class="uk-card-badge uk-label uk-label-danger" uk-tooltip="failed">STEP2</div>
                 {% endif %}
                 <!-- header -->
                 <div class="uk-card-header">
@@ -70,7 +70,6 @@
                 </div>
                 <!-- body -->
                 <div class="uk-card-body uk-text-center">
-                    <p>upload status: <span id="kbl_status">{{ kbl_status }}</span></p>
                     <p>kkbox_ver: <span id="kbl_kkbox_ver">{{ kbl_kkbox_ver }}</span></p>
                     <p>package_ver: <span id="kbl_package_ver">{{ kbl_package_ver }}</span></p>
                     <p>package_descr: <span id="kbl_package_descr">{{ kbl_package_descr }}</span></p>
@@ -78,7 +77,7 @@
                 </div>
                 <!-- footer -->
                 <div class="uk-card-footer uk-padding-remove">
-                    <div class="js-upload uk-placeholder uk-text-center">
+                    <div class="js-upload uk-placeholder uk-text-center no-border">
                         <span uk-icon="icon: cloud-upload"></span>
                         <span class="uk-text-middle">Attach .kbl by dropping them here or</span>
                         <div id="upload_kbl" enctype="multipart/form-data" method="POST" uk-form-custom>
@@ -89,12 +88,41 @@
                     </div>
                 </div>
             </div>
+            <!-- step3 -->
+            <div class="uk-card uk-card-default uk-margin-bottom">
+                <!-- status -->
+                {% if spotify_outh_status and kkbox_outh_status %}
+                    <div id="step3_status" class="uk-card-badge uk-label uk-label-success" uk-tooltip="success">STEP3</div>
+                {% else %}
+                    <div id="step3_status" class="uk-card-badge uk-label uk-label-danger" uk-tooltip="failed">STEP3</div>
+                {% endif %}
+                <!-- header -->
+                <div class="uk-card-header">
+                    <h3 class="uk-text-center uk-card-title">Select your Spotify playlists</h3>
+                </div>
+                <!-- body -->
+                <div class="uk-card-body">
+                    <div class="uk-text-center">
+                        {% if spotify_outh_status %}
+                            <button id='get_sp_playlist' class="uk-button uk-button-default uk-width-1-2 button-success">Get Spotify playlist</button>
+                        {% else %}
+                            <button id='get_sp_playlist' class="uk-button uk-button-default uk-width-1-2 uk-button-danger">Get Spotify playlist</button>
+                        {% endif %}
+                    </div>
+                    <form id="sp_playlists" class="uk-overflow-auto">
+                    </form>
+                </div>
+                <!-- footer -->
+                <div class="uk-card-footer uk-text-center">
+                    {% if kkbox_outh_status %}
+                        <button id="search_btn" class="uk-button uk-button-default uk-width-1-2 uk-button-primary">Search in KKBOX</button>
+                    {% else %}
+                        <button id="search_btn" class="uk-button uk-button-default uk-width-1-2 uk-button-danger">Search in KKBOX</button>
+                    {% endif %}
+                </div>
+            </div>
 
-            <hr>
-            <h3>3. Spotify playlist</h3>
-            <button id='get_sp_playlist'>Get playlist</button>
-            <form id="spotify_playlists" method="POST"></form>
-            <button id="search_btn" type="button">Search in KKBOX</button>
+            <!-- <form id="spotify_playlists" method="POST"></form> -->
             <hr>
             <h3>4. Select tracks</h3>
             <div id="search_detail" method="POST"></div>

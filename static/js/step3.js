@@ -7,24 +7,44 @@ $(function () {
                 var status = data.response.status
                 var msg = data.response.msg
                 var data = data.response.data
+                // failed
                 if (status == 'failed') {
-                    $("#spotify_playlists").html('<p>Failed - ' + msg + '</p>')
+                    $('#step3_status').removeClass('uk-label-success')
+                    $('#step3_status').addClass('uk-label-danger')
+                    $('#step3_status').attr('uk-tooltip', msg)
+                    $('#step3_status').html('FAILED')
                     return
                 }
+                // success
+                $('#step3_status').removeClass('uk-label-danger')
+                $('#step3_status').addClass('uk-label-success')
+                $('#step3_status').attr('uk-tooltip', msg)
+                $('#step3_status').html('SUCCESS')
                 var playlists = data.playlists.items
                 var html = ''
-                /*
-                 * <input type="checkbox" name="sp_playlist" value="{{ playlist_id }}">
-                 * {{ playlist_name }}
-                 */
+                html += `<table class="uk-table uk-table-hover uk-table-middle uk-table-divider" id="sp_playlists">`
+                html += `<thead><tr>`
+                html += `<th class="uk-table-shrink"><input class="uk-checkbox" type='checkbox' id="sp_playlists_checkall"></input></th>`
+                html += `<th class="uk-table-shrink uk-text-center">Cover</th>`
+                html += `<th class="uk-table-expand">Playlist name</th>`
+                html += `</tr></thead>`
+                html += `<tbody>`
                 for (let i = 0; i < playlists.length; i++) {
                     const element = playlists[i]
-                    html += `<div>`
-                    html += `<input type='checkbox' name='${element.name}' value='${element.id}'>`
-                    html += element.name
-                    html += `</div>`
+                    const playlist_cover = element['images'][0].url
+                    html += `<tr>`
+                    html += `<td><input class="uk-checkbox" type='checkbox' name='${element.name}' value='${element.id}'></td>`
+                    html += `<td><img class="uk-preserve-width" src="${playlist_cover}" width="60" alt=""></td>`
+                    html += `<td>${element.name}</td>`
+                    html += `</tr>`
                 }
-                $("#spotify_playlists").html(html)
+                html += `</tbody>`
+                html += `</table>`
+                $("#sp_playlists").addClass('uk-margin-top')
+                $("#sp_playlists").html(html)
+                $('#sp_playlists_checkall').click(function () {
+                    $('#sp_playlists tbody input:checkbox').prop('checked', this.checked)
+                })
             }
         });
     });

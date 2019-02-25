@@ -19,18 +19,20 @@ $(function () {
         completeAll: function () {
             response = JSON.parse(arguments[0].response).response
             if (response.status == "success") {
-                $('#kbl_status').html(response.status)
                 $('#kbl_kkbox_ver').html(response.data.kkbox_ver)
                 $('#kbl_package_ver').html(response.data.package_ver)
                 $('#kbl_package_descr').html(response.data.package_descr)
                 $('#kbl_package_packdate').html(response.data.package_packdate)
-                $('#step2_status').removeClass('label-failed')
-                $('#step2_status').addClass('label-success')
+                $('#step2_status').removeClass('uk-label-danger')
+                $('#step2_status').addClass('uk-label-success')
+                $('#step2_status').attr('uk-tooltip', response.msg)
+                $('#step2_status').html('SUCCESS')
             }
             else if (response.status == "failed") {
-                $('#kbl_status').html(response.msg)
-                $('#step2_status').removeClass('label-success')
-                $('#step2_status').addClass('label-failed')
+                $('#step2_status').removeClass('uk-label-success')
+                $('#step2_status').addClass('uk-label-danger')
+                $('#step2_status').attr('uk-tooltip', response.msg)
+                $('#step2_status').html('FAILED')
             }
             bar.setAttribute('hidden', 'hidden');
         }
