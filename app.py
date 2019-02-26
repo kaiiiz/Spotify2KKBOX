@@ -146,9 +146,9 @@ def search_trackdata_in_kk(name, artist, album):
         ses.mount('https://', HTTPAdapter(max_retries=5))
 
     # 0. Prepare variables (case insensitive)
-    SP_NAME = name.lower()
-    SP_ALBUM = album.lower()
-    SP_ARTIST = artist.lower()
+    SP_NAME = name.split('(')[0].split('-')[0].strip().lower()
+    SP_ALBUM = album.split('(')[0].split('-')[0].strip().lower()
+    SP_ARTIST = artist.split('(')[0].split('-')[0].strip().lower()
 
     # 1. Search album_id
     album_id = ''
