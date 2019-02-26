@@ -61,7 +61,7 @@ $(function () {
     $('#search_btn').click(function () {
         var form_data = new FormData($('#sp_playlists')[0]);
         // Create frame
-        $('#search_detail').empty()
+        $('#search_detail').html('<div class="uk-text-center">Nothing here :(</div>')
         var html = ''
         var playlist_cnt = 0
         for (var pair of form_data.entries()) {
@@ -118,39 +118,51 @@ $(function () {
                     `
             playlist_cnt += 1
         }
-        $('#search_detail').html(html)
-        $(`#search_log_${playlist_cnt-1}`).removeClass('uk-margin-bottom')
-        for (let i = 0; i < playlist_cnt; i++) {
-            $('#search_checkall_' + i).click(function () {
-                $(`#search_success_${i} input:checkbox`).prop('checked', this.checked)
-            })
+        if (playlist_cnt == 0) {
+            return;
         }
-        $.ajax({
-            type: 'POST',
-            url: '/search/all_tracks_in_sp',
-            data: form_data,
-            contentType: false,
-            cache: false,
-            processData: false,
-            success: function (data) {
-                var status = data.response.status
-                var msg = data.response.msg
-                var sp_playlists = data.response.data
-                if (status == "failed") {
-                    $("#search_detail").html('<p>Failed - ' + msg + '</p>')
-                    return
-                }
-                else {
-                    var playlist_cnt = 0
-                    sp_playlists.forEach(sp_playlist => {
-                        var track_num = sp_playlist[1].length
-                        $('#search_songnum_' + playlist_cnt).html(track_num)
-                        var done = search_in_kkbox(sp_playlist, playlist_cnt)
-                        if (done) playlist_cnt++
-                    });
-                }
-            },
-        });
+        else {
+            $('#search_detail').html(html)
+            $(`#search_log_${playlist_cnt - 1}`).removeClass('uk-margin-bottom')
+            for (let i = 0; i < playlist_cnt; i++) {
+                $('#search_checkall_' + i).click(function () {
+                    $(`#search_success_${i} input:checkbox`).prop('checked', this.checked)
+                })
+            }
+            $.ajax({
+                type: 'POST',
+                url: '/search/all_tracks_in_sp',
+                data: form_data,
+                contentType: false,
+                cache: false,
+                processData: false,
+                success: function (data) {
+                    var status = data.response.status
+                    var msg = data.response.msg
+                    var sp_playlists = data.response.data
+                    if (status == "failed") {
+                        $('#step3_status').removeClass('uk-label-success')
+                        $('#step3_status').addClass('uk-label-danger')
+                        $('#step3_status').attr('uk-tooltip', msg)
+                        $('#step3_status').html('FAILED')
+                        return
+                    }
+                    else {
+                        $('#step3_status').removeClass('uk-label-danger')
+                        $('#step3_status').addClass('uk-label-success')
+                        $('#step3_status').attr('uk-tooltip', msg)
+                        $('#step3_status').html('SUCCESS')
+                        var playlist_cnt = 0
+                        sp_playlists.forEach(sp_playlist => {
+                            var track_num = sp_playlist[1].length
+                            $('#search_songnum_' + playlist_cnt).html(track_num)
+                            var done = search_in_kkbox(sp_playlist, playlist_cnt)
+                            if (done) playlist_cnt++
+                        });
+                    }
+                },
+            });
+        }
     });
 });
 function search_in_kkbox(sp_playlist, playlist_cnt) {
