@@ -22,8 +22,14 @@
 
     <body>
         <div class="uk-container uk-container-xsmall">
-            <h1 class="uk-text-center">Spotify2KKBOX</h1>
-            <hr>
+            <div class="uk-height-small uk-flex uk-flex-center uk-flex-middle uk-flex-column uk-background-cover uk-margin-top uk-margin-bottom" data-src="/static/images/logo.png" uk-img>
+                <h1 class="uk-margin-small-bottom">Spotify2KKBOX</h1>
+                <div>
+                    <a href="https://github.com/kaiiiz/Spotify2KKBOX" uk-icon="icon: github; ratio: 1.4" uk-tooltip="title: Source code; pos: bottom"></a>
+                    <a href="https://github.com/kaiiiz/Spotify2KKBOX/wiki" uk-icon="icon: file-text; ratio: 1.4" uk-tooltip="title: Documentation; pos: bottom"></a>
+                    <a href="https://github.com/kaiiiz/Spotify2KKBOX/wiki/How-to-use%3F" uk-icon="icon: question; ratio: 1.4" uk-tooltip="title: How to use?; pos: bottom"></a>
+                </div>
+            </div>
 
             <!-- step1 -->
             <div class="uk-card uk-card-default uk-margin-bottom">
@@ -35,14 +41,10 @@
                 {% endif %}
                 <!-- header -->
                 <div class="uk-card-header">
-                    <h3 class="uk-text-center uk-card-title">OAuth</h3>
+                    <h3 class="uk-text-center uk-card-title">Login</h3>
                 </div>
                 <!-- body -->
                 <div class="uk-card-body uk-text-center">
-                    <p>Description</p>
-                </div>
-                <!-- footer -->
-                <div class="uk-card-footer">
                     <form class="uk-text-center" action="{{ url_for('login') }}" method="POST">
                         {% if spotify_outh_status %}
                             <button class="uk-button uk-button-default uk-width-1-4 button-success" name="platform" value="spotify">Spotify</button>
