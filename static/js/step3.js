@@ -81,7 +81,7 @@ $(function () {
                         <ul uk-accordion="multiple: true">
                             <li>
                                 <a class="uk-accordion-title" href="#">Success</a>
-                                <table class="uk-table uk-table-hover uk-table-middle uk-table-divider uk-accordion-content">
+                                <table class="uk-table uk-table-hover uk-table-middle uk-table-divider uk-accordion-content uk-margin-remove-bottom">
                                     <thead>
                                         <tr>
                                             <th class="uk-table-shrink"><input class="uk-checkbox" type='checkbox' id="search_checkall_${playlist_cnt}" checked></input></th>
@@ -98,7 +98,7 @@ $(function () {
                             </li>
                             <li>
                                 <a class="uk-accordion-title" href="#">Failed</a>
-                                <table class="uk-table uk-table-hover uk-table-middle uk-table-divider uk-accordion-content">
+                                <table class="uk-table uk-table-hover uk-table-middle uk-table-divider uk-accordion-content uk-margin-remove-bottom">
                                     <thead>
                                         <tr>
                                             <th class="uk-table-shrink"><input class="uk-checkbox" type='checkbox' disabled></input></th>
