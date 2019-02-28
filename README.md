@@ -23,7 +23,7 @@ See [How to use](https://github.com/kaiiiz/Spotify2KKBOX/wiki/How-to-use%3F)
 
 ## How to run in local?
 
-Since I use the free heroku plan, the transform progress may be extremely slow. I suggest to clone the project and run it locally if you expect the greater performance.
+Since the free heroku plan, the transform progress may be extremely slow. I suggest to clone the project and run it locally if you expect the greater performance.
 
 ### Install
 
