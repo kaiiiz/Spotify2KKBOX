@@ -2,6 +2,8 @@
 
 A song shift tool from spotify to kkbox (using kbl)
 
+⚠️ Disclaimer: This tool is produced by the reverse engineering, and is my own works, KKBOX and Spotify aren't related to this tool. Be careful, there is no endorsement of this tool. Use at your own risk. 
+
 ## Background
 
 Because KKBOX doesn't provide any API to modify playlist. The only way to convert playlist is using the import/export playlist features in KKBOX app.
@@ -17,11 +19,11 @@ See [How to use](https://github.com/kaiiiz/Spotify2KKBOX/wiki/How-to-use%3F)
 1. Get spotify playlist with its API
 2. Search keyword in KKBOX API
 3. **(TRICKY WORK)** Use crawler to search kbl's track id in track url (because kbl's track id isn't same as API's track id)
-4. Package all information to kbl file
+4. Package all informations to kbl file
 
 ## How to run in local?
 
-Since I use the free heroku plan, the performance of the transform progress may be extremely slow. I suggest to clone the project and run it locally if you expect the greater performance.
+Since I use the free heroku plan, the transform progress may be extremely slow. I suggest to clone the project and run it locally if you expect the greater performance.
 
 ### Install
 
