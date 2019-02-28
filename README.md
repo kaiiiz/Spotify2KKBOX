@@ -8,7 +8,7 @@ A song shift tool from spotify to kkbox (using kbl)
 
 Because KKBOX doesn't provide any API to modify playlist. The only way to convert playlist is using the import/export playlist features in KKBOX app.
 
-So I wrote the python script in order to create kbl file last year, package it with flask and deploy it to heroku recently.
+So I wrote the python script in order to create kbl file last year, pack it with flask and deploy it to heroku recently.
 
 ## How to use?
 
