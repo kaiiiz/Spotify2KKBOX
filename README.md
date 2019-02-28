@@ -19,7 +19,7 @@ See [How to use](https://github.com/kaiiiz/Spotify2KKBOX/wiki/How-to-use%3F)
 1. Get spotify playlist with its API
 2. Search keyword in KKBOX API
 3. Use crawler to search kbl's track id in track url (because kbl's track id isn't same as API's track id)
-4. Package all informations to kbl file
+4. Package up all informations and generate kbl file
 
 ## How to run in local?
 
